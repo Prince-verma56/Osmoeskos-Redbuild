@@ -12,7 +12,7 @@
 
 # testing
 /coverage
-
+/OsmeKos-Brain
 # next.js
 /.next/
 /out/
