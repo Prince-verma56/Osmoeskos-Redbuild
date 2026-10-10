@@ -126,5 +126,48 @@
   }
   html {
     @apply font-sans;
+    scroll-padding-top: 6rem;
+  }
+}
+
+@layer utilities {
+  .mega-menu-scrollbar {
+    scrollbar-color: #899b81 transparent;
+    scrollbar-width: thin;
+  }
+
+  .mega-menu-scrollbar::-webkit-scrollbar {
+    width: 0.45rem;
+  }
+
+  .mega-menu-scrollbar::-webkit-scrollbar-track {
+    margin-block: 1.5rem;
+    background: rgb(220 227 212 / 0.45);
+    border-radius: 999px;
+  }
+
+  .mega-menu-scrollbar::-webkit-scrollbar-thumb {
+    min-height: 3.5rem;
+    border: 0.12rem solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+    background-image: linear-gradient(180deg, #B7A06B 0%, #899B81 50%, #B7A06B 100%);
+    background-size: 100% 180%;
+    animation: mega-menu-scroll-shimmer 4s ease-in-out infinite;
+  }
+
+  .mega-menu-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-image: linear-gradient(180deg, #C9B57C 0%, #6F8768 50%, #C9B57C 100%);
+  }
+
+  @keyframes mega-menu-scroll-shimmer {
+    0%, 100% { background-position: 0 0; }
+    50% { background-position: 0 100%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mega-menu-scrollbar::-webkit-scrollbar-thumb {
+      animation: none;
+    }
   }
 }

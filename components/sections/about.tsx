@@ -6,12 +6,12 @@ export function About() {
       <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
         
         {/* Left Media */}
-        <div className="order-2 lg:order-1 relative w-full aspect-[4/5] md:aspect-[3/4] lg:aspect-[4/5] rounded-[2rem] lg:rounded-tr-[8rem] lg:rounded-bl-[8rem] overflow-hidden bg-background shadow-xl">
+        <div className="order-2 lg:order-1 relative w-full aspect-[4/3] rounded-[2rem] lg:rounded-tr-[6rem] lg:rounded-bl-[6rem] overflow-hidden bg-background shadow-xl">
           <Image 
             src="/images/osmekos-about-lifestyle.jpg" 
-            alt="OsmeKos Brand Story" 
+            alt="A quiet body-care ritual in a light-filled space" 
             fill
-            className="object-cover object-center"
+            className="object-cover object-[center_top]"
             sizes="(max-width: 1024px) 100vw, 50vw"
           />
         </div>
