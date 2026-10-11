@@ -3,63 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Search, X } from "lucide-react";
-
-type SearchResult = {
-  title: string;
-  description: string;
-  href: string;
-};
-
-const searchIndex: SearchResult[] = [
-  {
-    title: "OsmeKos Body Lotion",
-    description: "Our signature daily care formula designed to deeply hydrate and protect your skin's natural barrier.",
-    href: "/product/body-lotion",
-  },
-  {
-    title: "Triple Ceramide Complex",
-    description: "Core technology featuring Ceramides NP, AP, and EOP to replenish essential lipids.",
-    href: "/product/body-lotion",
-  },
-  {
-    title: "Shea Butter",
-    description: "A rich botanical butter (3%) that deeply moisturizes and softens dry skin.",
-    href: "/ingredients",
-  },
-  {
-    title: "Coconut Oil",
-    description: "Hydrating oil (2%) that locks in moisture and improves skin elasticity.",
-    href: "/ingredients",
-  },
-  {
-    title: "Niacinamide",
-    description: "Vitamin B3 derivative (2%) that helps even skin tone and fortify the natural skin barrier.",
-    href: "/ingredients",
-  },
-  {
-    title: "Vitamin E",
-    description: "Powerful antioxidant (0.5%) that protects skin from free radicals.",
-    href: "/ingredients",
-  },
-  {
-    title: "Our Story",
-    description: "Learn about OsmeKos and our philosophy rooted in botanical science.",
-    href: "/about",
-  },
-];
+import { filterSearchResults } from "@/lib/search-data";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
 
-  const filteredResults = searchIndex.filter((item) => {
-    if (!query.trim()) return false;
-    const lowerQuery = query.toLowerCase();
-    return (
-      item.title.toLowerCase().includes(lowerQuery) ||
-      item.description.toLowerCase().includes(lowerQuery)
-    );
-  });
-
+  const filteredResults = filterSearchResults(query);
   const hasSearched = query.trim().length > 0;
 
   return (
@@ -77,7 +26,8 @@ export default function SearchPage() {
             autoFocus
           />
           {query && (
-            <button 
+            <button
+              type="button"
               onClick={() => setQuery("")}
               className="absolute right-6 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
               aria-label="Clear search"
@@ -121,7 +71,8 @@ export default function SearchPage() {
             <div className="py-24 text-center flex flex-col items-center gap-4 text-muted-foreground">
               <X className="w-12 h-12 opacity-20" />
               <p className="text-lg">No results found for &ldquo;{query}&rdquo;.</p>
-              <button 
+              <button
+                type="button"
                 onClick={() => setQuery("")}
                 className="text-primary hover:underline text-sm font-medium mt-2"
               >

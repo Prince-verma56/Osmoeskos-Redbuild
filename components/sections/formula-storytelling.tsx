@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Droplet, Leaf, ShieldCheck, Sparkles } from "lucide-react";
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { gsap } from "@/lib/animations/gsap";
+import { prefersReducedMotion } from "@/lib/animations/reveal";
 
 const benefits = [
   { icon: Droplet, title: "Deep & Long-lasting Hydration" },
@@ -23,24 +23,22 @@ export function FormulaStorytelling() {
 
   useGSAP(
     () => {
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (prefersReducedMotion()) {
         return;
       }
-
-      gsap.registerPlugin(ScrollTrigger);
 
       const timeline = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: "top 72%",
-          toggleActions: "play none none reverse",
+          start: "top 78%",
+          once: true,
         },
       });
 
       timeline
         .from(leftContentRef.current, {
           y: 32,
-          opacity: 0,
+          autoAlpha: 0,
           duration: 0.8,
           ease: "power3.out",
         })
@@ -48,7 +46,7 @@ export function FormulaStorytelling() {
           rightListRef.current?.children ?? [],
           {
             x: 24,
-            opacity: 0,
+            autoAlpha: 0,
             duration: 0.6,
             stagger: 0.12,
             ease: "power2.out",
@@ -75,7 +73,7 @@ export function FormulaStorytelling() {
       id="formula"
       ref={sectionRef}
       aria-labelledby="formula-heading"
-      className="relative isolate flex min-h-[43rem] w-full items-center overflow-hidden bg-[#263526] px-6 py-32 text-[#F7F5EF] md:px-12 lg:min-h-[48rem] lg:px-24 lg:py-44"
+      className="relative isolate flex min-h-[40rem] w-full items-center overflow-hidden bg-[#243526] px-6 py-24 text-[#F7F5EF] md:px-12 lg:min-h-[48rem] lg:px-24 lg:py-44"
     >
       <div className="absolute inset-0 -z-30 overflow-hidden" aria-hidden="true">
         <div ref={backgroundRef} className="absolute -inset-x-4 -top-[8%] h-[116%]">
@@ -100,7 +98,7 @@ export function FormulaStorytelling() {
         style={{ height: "clamp(3.5rem, 7vw, 7rem)" }}
         viewBox="0 0 1440 112"
         preserveAspectRatio="none"
-        fill="#f7f5ef"
+        fill="var(--background)"
         aria-hidden="true"
         focusable="false"
       >
@@ -112,7 +110,7 @@ export function FormulaStorytelling() {
         style={{ height: "clamp(4rem, 8vw, 8rem)" }}
         viewBox="0 0 1440 128"
         preserveAspectRatio="none"
-        fill="#f7f5ef"
+        fill="var(--background)"
         aria-hidden="true"
         focusable="false"
       >
@@ -132,10 +130,10 @@ export function FormulaStorytelling() {
           </p>
           <Link
             href="/product/body-lotion"
-            className="mt-8 inline-flex items-center gap-3 rounded-full border border-[#F7F5EF]/55 bg-[#F7F5EF]/10 px-6 py-3.5 text-sm font-medium text-[#F7F5EF] transition-colors hover:bg-[#F7F5EF] hover:text-[#243526] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F7F5EF]"
+            className="btn-premium btn-premium--light mt-8 inline-flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F7F5EF]"
           >
             Discover the product
-            <span aria-hidden="true">→</span>
+            <span aria-hidden="true" className="btn-premium__arrow">→</span>
           </Link>
         </div>
 

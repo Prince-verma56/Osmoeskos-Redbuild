@@ -130,6 +130,157 @@
   }
 }
 
+/* Centralized editorial typography scale. Display/title/section use the
+   Cormorant Garamond heading family; eyebrow/body use DM Sans. clamp()
+   keeps headings readable and prevents awkward wrapping on narrow screens. */
+@layer components {
+  .type-display {
+    font-family: var(--font-heading);
+    font-size: clamp(2.65rem, 9vw, 4.75rem);
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+  }
+  .type-page-title {
+    font-family: var(--font-heading);
+    font-size: clamp(2.75rem, 6vw, 4.5rem);
+    line-height: 1.05;
+    letter-spacing: -0.005em;
+  }
+  .type-section-title {
+    font-family: var(--font-heading);
+    font-size: clamp(2.1rem, 4.2vw, 3.25rem);
+    line-height: 1.1;
+  }
+  .type-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+  }
+  .type-body {
+    font-size: clamp(1rem, 1.6vw, 1.125rem);
+    line-height: 1.7;
+  }
+
+  /* Premium interactive buttons.
+     A soft fill sweeps in behind the label on hover/focus, an optional
+     arrow (.btn-premium__arrow) nudges forward, and the control lifts
+     gently. The label sits above the sweep because the fill is a -z-index
+     pseudo-element, which paints over the element's own background but
+     under its normal-flow content. Reduced motion drops the sweep and lift
+     and falls back to a plain colour change so hover still reads. */
+  .btn-premium {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    transition:
+      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      color 0.4s ease,
+      border-color 0.4s ease;
+  }
+  .btn-premium::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .btn-premium:hover,
+  .btn-premium:focus-visible {
+    transform: translateY(-2px);
+  }
+  .btn-premium:hover::before,
+  .btn-premium:focus-visible::before {
+    transform: scaleX(1);
+  }
+  .btn-premium:active {
+    transform: translateY(0);
+  }
+  .btn-premium__arrow {
+    display: inline-block;
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .btn-premium:hover .btn-premium__arrow,
+  .btn-premium:focus-visible .btn-premium__arrow {
+    transform: translateX(0.3rem);
+  }
+
+  /* Primary — deep botanical green with a lighter green sheen sweep. */
+  .btn-premium--primary {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    box-shadow: 0 0.6rem 1.5rem -0.7rem rgb(36 53 38 / 0.5);
+  }
+  .btn-premium--primary::before {
+    background-image: linear-gradient(110deg, #2d4531 0%, #3a5740 45%, #6f8768 100%);
+  }
+  .btn-premium--primary:hover,
+  .btn-premium--primary:focus-visible {
+    box-shadow: 0 0.95rem 2.1rem -0.6rem rgb(36 53 38 / 0.55);
+  }
+
+  /* Outline — transparent on warm neutrals; fills with deep green. */
+  .btn-premium--outline {
+    border: 1px solid color-mix(in oklch, var(--primary), transparent 80%);
+    color: var(--primary);
+    background-color: transparent;
+  }
+  .btn-premium--outline::before {
+    background-color: var(--primary);
+  }
+  .btn-premium--outline:hover,
+  .btn-premium--outline:focus-visible {
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+  }
+
+  /* Light — for dark feature areas (Formula): fills with warm ivory. */
+  .btn-premium--light {
+    border: 1px solid rgb(247 245 239 / 0.55);
+    color: #f7f5ef;
+    background-color: rgb(247 245 239 / 0.1);
+  }
+  .btn-premium--light::before {
+    background-color: #f7f5ef;
+  }
+  .btn-premium--light:hover,
+  .btn-premium--light:focus-visible {
+    color: #243526;
+    border-color: #f7f5ef;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn-premium,
+    .btn-premium::before,
+    .btn-premium__arrow {
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    .btn-premium::before {
+      display: none;
+    }
+    .btn-premium:hover,
+    .btn-premium:focus-visible,
+    .btn-premium:active {
+      transform: none;
+    }
+    .btn-premium--outline:hover,
+    .btn-premium--outline:focus-visible {
+      background-color: var(--primary);
+    }
+    .btn-premium--light:hover,
+    .btn-premium--light:focus-visible {
+      background-color: #f7f5ef;
+    }
+    .btn-premium--primary:hover,
+    .btn-premium--primary:focus-visible {
+      background-color: color-mix(in oklch, var(--primary), #6f8768 35%);
+    }
+  }
+}
+
 @layer utilities {
   .mega-menu-scrollbar {
     scrollbar-color: #899b81 transparent;

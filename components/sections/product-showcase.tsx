@@ -2,10 +2,10 @@
 
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Link from "next/link";
 import Image from "next/image";
+import { gsap } from "@/lib/animations/gsap";
+import { prefersReducedMotion } from "@/lib/animations/reveal";
 
 export function ProductShowcase() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -16,40 +16,45 @@ export function ProductShowcase() {
   const subCard3Ref = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (prefersReducedMotion()) {
       return;
     }
 
-    gsap.registerPlugin(ScrollTrigger);
-    
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: sectionRef.current,
-        start: "top 70%",
-        end: "center center",
-        toggleActions: "play none none reverse",
-      }
+        start: "top 78%",
+        once: true,
+      },
     });
 
     tl.from(leftContentRef.current, {
       y: 40,
-      opacity: 0,
+      autoAlpha: 0,
       duration: 0.8,
-      ease: "power3.out"
+      ease: "power3.out",
     })
-    .from(mainCardRef.current, {
-      y: 40,
-      opacity: 0,
-      duration: 0.8,
-      ease: "power3.out"
-    }, "-=0.6")
-    .from([subCard1Ref.current, subCard2Ref.current, subCard3Ref.current], {
-      y: 20,
-      opacity: 0,
-      duration: 0.6,
-      stagger: 0.15,
-      ease: "power2.out"
-    }, "-=0.4");
+      .from(
+        mainCardRef.current,
+        {
+          y: 40,
+          autoAlpha: 0,
+          duration: 0.8,
+          ease: "power3.out",
+        },
+        "-=0.6",
+      )
+      .from(
+        [subCard1Ref.current, subCard2Ref.current, subCard3Ref.current],
+        {
+          y: 20,
+          autoAlpha: 0,
+          duration: 0.6,
+          stagger: 0.15,
+          ease: "power2.out",
+        },
+        "-=0.4",
+      );
   }, { scope: sectionRef });
 
   return (
@@ -75,9 +80,9 @@ export function ProductShowcase() {
           </p>
           <Link
             href="/product/body-lotion"
-            className="mt-6 px-8 py-4 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 duration-300"
+            className="btn-premium btn-premium--primary mt-6 inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-medium"
           >
-            Shop Body Lotion
+            Shop Body Lotion <span aria-hidden="true" className="btn-premium__arrow">&rarr;</span>
           </Link>
         </div>
 

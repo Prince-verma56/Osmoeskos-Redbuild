@@ -14,7 +14,7 @@ export default function AboutPage() {
       <section id="philosophy" className="w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-24 mb-20 lg:mb-24">
         <div className="flex flex-col items-center gap-5 text-center mb-10 md:mb-12">
           <span className="text-xs uppercase tracking-[0.2em] font-semibold text-accent">Our Story</span>
-          <h1 className="text-5xl md:text-7xl font-heading text-foreground">
+          <h1 className="type-page-title text-foreground">
             Rooted in <br className="hidden sm:block"/>Botanical Science.
           </h1>
           <p className="max-w-xl text-lg text-muted-foreground leading-relaxed">
@@ -49,10 +49,10 @@ export default function AboutPage() {
               The result is a deeply protective, long-lasting barrier that feels lightweight and luxurious.
             </p>
             <div className="flex flex-wrap gap-4 mt-2">
-              <Link href="/product/body-lotion" className="w-fit px-8 py-4 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors text-sm">
-                Explore Our Formula
+              <Link href="/product/body-lotion" className="btn-premium btn-premium--primary inline-flex w-fit items-center gap-2 rounded-full px-8 py-4 text-sm font-medium">
+                Explore Our Formula <span aria-hidden="true" className="btn-premium__arrow">&rarr;</span>
               </Link>
-              <Link href="/ingredients" className="w-fit px-8 py-4 rounded-full border border-foreground/20 text-foreground hover:bg-foreground/5 transition-colors font-medium text-sm">
+              <Link href="/ingredients" className="btn-premium btn-premium--outline inline-flex w-fit items-center rounded-full px-8 py-4 text-sm font-medium">
                 Our Ingredients
               </Link>
             </div>

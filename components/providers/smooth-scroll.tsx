@@ -2,11 +2,21 @@
 
 import { useEffect } from "react";
 import Lenis from "lenis";
+import { gsap, ScrollTrigger } from "@/lib/animations/gsap";
 
 export function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const refresh = () => ScrollTrigger.refresh();
+
+    // Re-measure ScrollTriggers once fonts and the window load settle the
+    // layout, so reveal triggers are never computed against a shifting page.
+    document.fonts?.ready.then(refresh).catch(() => {});
+    window.addEventListener("load", refresh);
+
+    if (reduce) {
+      // No smooth scroll under reduced motion — native scrolling only.
+      return () => window.removeEventListener("load", refresh);
     }
 
     const lenis = new Lenis({
@@ -18,18 +28,20 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
       touchMultiplier: 2,
     });
 
-    let frameId = 0;
+    // Single source of scroll truth: Lenis drives ScrollTrigger updates and
+    // GSAP's ticker drives Lenis, so there is one rAF loop, not two.
+    lenis.on("scroll", ScrollTrigger.update);
 
-    function raf(time: number) {
-      lenis.raf(time);
-      frameId = requestAnimationFrame(raf);
-    }
-
-    frameId = requestAnimationFrame(raf);
+    const onTick = (time: number) => lenis.raf(time * 1000);
+    gsap.ticker.add(onTick);
+    gsap.ticker.lagSmoothing(0);
 
     return () => {
-      cancelAnimationFrame(frameId);
+      lenis.off("scroll", ScrollTrigger.update);
+      gsap.ticker.remove(onTick);
+      gsap.ticker.lagSmoothing(500, 33);
       lenis.destroy();
+      window.removeEventListener("load", refresh);
     };
   }, []);
 

@@ -13,7 +13,7 @@ export default function ShopPage() {
       {/* Editorial Header */}
       <section className="w-full px-6 md:px-12 lg:px-24 max-w-7xl mx-auto mb-16 text-center">
         <span className="text-xs uppercase tracking-[0.2em] font-semibold text-accent mb-4 block">Single-Product Collection</span>
-        <h1 className="text-5xl md:text-7xl font-heading text-foreground mb-6">
+        <h1 className="type-page-title text-foreground mb-6">
           The Collection
         </h1>
         <p className="text-lg text-muted-foreground max-w-xl mx-auto">
@@ -57,15 +57,15 @@ export default function ShopPage() {
             </ul>
 
             <div className="flex flex-col sm:flex-row gap-4 mt-2 w-full max-w-sm">
-              <Link 
-                href="/product/body-lotion" 
-                className="flex-1 py-4 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors text-center text-sm"
+              <Link
+                href="/product/body-lotion"
+                className="btn-premium btn-premium--primary inline-flex flex-1 items-center justify-center gap-2 rounded-full py-4 text-center text-sm font-medium"
               >
-                View Details
+                View Details <span aria-hidden="true" className="btn-premium__arrow">&rarr;</span>
               </Link>
-              <Link 
-                href="/ingredients" 
-                className="flex-1 py-4 rounded-full border border-foreground/20 text-foreground hover:bg-foreground/5 transition-colors text-center font-medium text-sm"
+              <Link
+                href="/ingredients"
+                className="btn-premium btn-premium--outline inline-flex flex-1 items-center justify-center rounded-full py-4 text-center text-sm font-medium"
               >
                 Ingredients
               </Link>

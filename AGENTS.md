@@ -84,3 +84,42 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **Interaction model:** Desktop supports hover with a short close grace period, click-to-toggle, outside-click dismissal, and Escape. Mobile uses the existing Sheet with compact native disclosure groups that close after navigation.
 - **Motion and accessibility:** Use Motion only for restrained UI transitions (approximately 200–250ms) and remove positional/staggered motion with `prefers-reduced-motion`. Keep disclosure buttons, direct links, focus rings, and `aria-expanded` states semantic and keyboard-accessible.
 - **Menu art direction:** Use a translucent warm-ivory, softly blurred, cream-led surface with sage highlights and restrained gold details. Menu imagery must be authentic OsmeKos imagery or the four dedicated ingredient assets. Never use Seed branding, Seed imagery, or the Seed-branded `osmekos-bottle-cutout.jpg` asset.
+
+## Phase 09 Decisions — Motion System, Spacing & Responsive Audit
+
+### Root-cause fix: content stuck invisible (empty formula panel + large mobile blank)
+- **Cause:** Section reveals used `gsap.from(..., {opacity:0})` with ScrollTrigger while Lenis ran its own rAF loop and never updated/refreshed ScrollTrigger. Trigger positions were measured before fonts/images settled, so the Product Showcase and the Formula benefits panel could be left permanently at `opacity:0` — read as a "large blank" and an "empty translucent panel".
+- **Fix:** `SmoothScrollProvider` now integrates Lenis with ScrollTrigger: `lenis.on("scroll", ScrollTrigger.update)`, GSAP's ticker drives `lenis.raf` (one rAF loop, not two), and `ScrollTrigger.refresh()` runs on `document.fonts.ready` and window `load`. All section reveals use `once: true` and `autoAlpha`, so content is revealed a single time and never re-hidden on scroll-up.
+
+### Animation responsibilities (reaffirmed, now centralized)
+- **Plugin registration:** single source in `lib/animations/gsap.ts`. Components import `{ gsap, ScrollTrigger }` from it — no per-component `registerPlugin`.
+- **Reusable reveal:** `lib/animations/reveal.ts` exports `prefersReducedMotion()` and `reveal(targets, { trigger, y, x, duration, stagger, start, delay })` — a fade+rise entrance that plays once. Keep this minimal; do not grow it into a framework.
+- **GSAP + ScrollTrigger:** section entrances, staggers, and the one scrubbed parallax (formula background). **Motion (Framer):** menu/search overlay + micro-interactions only. **Lenis:** smooth scroll via the single provider instance. Never let GSAP and Motion animate the same element's transform/opacity.
+- **Reduced motion:** every GSAP block returns early via `prefersReducedMotion()`, leaving server-rendered content fully visible. Reduced motion also skips Lenis (native scroll) but still refreshes ScrollTrigger.
+
+### Reusable scroll-reveal patterns in use
+- Hero: on-mount timeline (no ScrollTrigger — it is above the fold) staggering the eyebrow → headline → paragraph → CTA group; completes under the preloader on first visit, so no duplicate reveal.
+- About / home Ingredients: `reveal()` on media + staggered content/cards.
+- Product Showcase / Formula: scoped `useGSAP` timelines with `once: true`.
+
+### Typography
+- Keep **Cormorant Garamond** (display/headings) + **DM Sans** (body/UI). Do not swap font families again.
+- Centralized `clamp()` tokens live in `globals.css` under `@layer components`: `.type-display`, `.type-page-title`, `.type-section-title`, `.type-eyebrow`, `.type-body`. All four route H1s use `.type-page-title` for a consistent hierarchy.
+
+### Spacing / responsive
+- Mobile whitespace between stacked sections was trimmed at the source (About mobile `pt-28/pb-24`, Formula mobile `py-24` + `min-h-[40rem]`) while the desktop layered/curved overlap (negative margins + rounded bottoms) is preserved. Do not paper over gaps with arbitrary negative margins or filler content.
+
+### Correctness fixes
+- Formula section background corrected from off-token `#263526` to `#243526`; SVG wave fills changed from hardcoded `#f7f5ef` to `fill="var(--background)"`.
+- `/search` route now imports `filterSearchResults` from `lib/search-data` (single source) instead of a divergent inline index.
+- Search overlay backdrop gets `data-lenis-prevent` + `overscroll-contain` so the page behind it does not scroll.
+- Hero background image uses `priority` (LCP) rather than `loading="eager"`.
+
+### Verified
+- `tsc --noEmit` clean; `eslint` clean; production build (`next build`) prerenders all 7 routes as static; all 6 routes serve HTTP 200 in dev.
+- **Not visually verified in a browser this phase** (no browser automation available in the environment). Recommended manual QA: homepage scroll reveals, formula panel visibility, mobile (390/375/320px) spacing between About → Product → Formula, mega-menu + search overlay interactions.
+
+### Known / unresolved
+- Missing authentic assets still outstanding: transparent bottle cutout (`/images/osmekos-bottle-cutout.png`), wide formula texture (`/images/osmekos-formula-bg.jpg` placeholder in use). Do not substitute third-party/Seed imagery.
+- The preloader progress bar intentionally uses the restrained red `#C0392B` (Phase 05 permanent rule) — not a bug; do not "brand-correct" it.
+- `megaMenus.shop` keeps only its `href`/`trigger` in use (Shop Now is a direct CTA, not a flyout); its `featured`/`items` are unused by design.

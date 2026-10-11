@@ -32,7 +32,7 @@ export default function ProductPage() {
         <div className="flex flex-col justify-center gap-7 lg:py-8">
           <div className="flex flex-col gap-4">
             <span className="text-xs uppercase tracking-widest font-semibold text-accent">Daily Care</span>
-            <h1 className="text-5xl lg:text-6xl font-heading text-foreground leading-[1.05]">Body Lotion</h1>
+            <h1 className="type-page-title text-foreground">Body Lotion</h1>
             <p className="text-lg text-muted-foreground leading-relaxed mt-1 max-w-xl">
               A lightweight daily body lotion with a Triple Ceramide Complex and nourishing botanicals for skin that feels soft, comfortable, and cared for.
             </p>
@@ -78,15 +78,15 @@ export default function ProductPage() {
           </div>
 
           <div className="pt-4 flex flex-col sm:flex-row gap-4">
-            <Link 
-              href="/ingredients" 
-              className="flex-1 text-center py-4 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors text-sm"
+            <Link
+              href="/ingredients"
+              className="btn-premium btn-premium--primary inline-flex flex-1 items-center justify-center gap-2 rounded-full py-4 text-center text-sm font-medium"
             >
-              Explore Ingredients
+              Explore Ingredients <span aria-hidden="true" className="btn-premium__arrow">&rarr;</span>
             </Link>
-            <Link 
-              href="/shop" 
-              className="flex-1 text-center py-4 rounded-full border border-border text-foreground hover:bg-muted transition-colors font-medium text-sm"
+            <Link
+              href="/shop"
+              className="btn-premium btn-premium--outline inline-flex flex-1 items-center justify-center rounded-full py-4 text-center text-sm font-medium"
             >
               Back to Shop
             </Link>

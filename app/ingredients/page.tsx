@@ -36,7 +36,7 @@ export default function IngredientsPage() {
       {/* Page Header */}
       <section className="w-full max-w-5xl mx-auto px-6 md:px-12 lg:px-24 mb-16 text-center lg:mb-20">
         <span className="text-xs uppercase tracking-[0.2em] font-semibold text-accent mb-6 block">Transparent Formulation</span>
-        <h1 className="text-5xl md:text-7xl font-heading text-foreground mb-8">
+        <h1 className="type-page-title text-foreground mb-8">
           The Science of <br className="hidden sm:block"/>Nature.
         </h1>
         <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
@@ -92,15 +92,15 @@ export default function IngredientsPage() {
       {/* Navigation Footer */}
       <section className="w-full bg-[#EAE4D9] py-20 flex justify-center">
         <div className="flex flex-col sm:flex-row gap-5">
-          <Link 
-            href="/product/body-lotion" 
-            className="px-8 py-4 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors text-center text-sm"
+          <Link
+            href="/product/body-lotion"
+            className="btn-premium btn-premium--primary inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-center text-sm font-medium"
           >
             Back to Product
           </Link>
-          <Link 
-            href="/" 
-            className="px-8 py-4 rounded-full border border-foreground/20 text-foreground hover:bg-foreground/5 transition-colors text-center font-medium text-sm"
+          <Link
+            href="/"
+            className="btn-premium btn-premium--outline inline-flex items-center justify-center rounded-full px-8 py-4 text-center text-sm font-medium"
           >
             Return Home
           </Link>

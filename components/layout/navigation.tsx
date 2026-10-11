@@ -412,7 +412,8 @@ export function Navigation() {
             animate={reduceMotion ? undefined : { opacity: 1 }}
             exit={reduceMotion ? undefined : { opacity: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.2, ease: "easeOut" }}
-            className="fixed inset-0 z-[60] flex items-start justify-center bg-[#17231d]/30 px-4 pb-10 pt-24 backdrop-blur-[2px]"
+            data-lenis-prevent
+            className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto overscroll-contain bg-[#17231d]/30 px-4 pb-10 pt-24 backdrop-blur-[2px]"
             onClick={() => {
               setSearchOpen(false);
               setSearchQuery("");
@@ -622,9 +623,9 @@ export function Navigation() {
               href={megaMenus.shop.href}
               onClick={closeMenu}
               aria-current={pathname.startsWith("/shop") ? "page" : undefined}
-              className="inline-flex rounded-full bg-[#243526] px-5 py-2.5 text-sm font-semibold text-[#F7F5EF] transition-colors hover:bg-[#243526]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]"
+              className="btn-premium btn-premium--primary inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]"
             >
-              Shop Now
+              Shop Now <span aria-hidden="true" className="btn-premium__arrow">&rarr;</span>
             </Link>
           </div>
 
