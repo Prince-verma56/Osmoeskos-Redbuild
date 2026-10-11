@@ -73,7 +73,7 @@ export function FormulaStorytelling() {
       id="formula"
       ref={sectionRef}
       aria-labelledby="formula-heading"
-      className="relative isolate flex min-h-[40rem] w-full items-center overflow-hidden bg-[#243526] px-6 py-24 text-[#F7F5EF] md:px-12 lg:min-h-[48rem] lg:px-24 lg:py-44"
+      className="relative isolate flex min-h-[40rem] w-full items-center overflow-hidden bg-[#243526] px-6 py-24 text-[#F7F5EF] md:px-12 lg:min-h-[48rem] lg:px-24 lg:py-44 scroll-mt-0"
     >
       <div className="absolute inset-0 -z-30 overflow-hidden" aria-hidden="true">
         <div ref={backgroundRef} className="absolute -inset-x-4 -top-[8%] h-[116%]">

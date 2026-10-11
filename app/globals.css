@@ -7,9 +7,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-dm-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-cormorant-garamond);
+  --font-sans: var(--font-manrope);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Headings share the Manrope family with the body/UI for one cohesive,
+     modern-premium voice (matches the primary action buttons). */
+  --font-heading: var(--font-manrope);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -128,28 +130,40 @@
     @apply font-sans;
     scroll-padding-top: 6rem;
   }
+  /* Headings use Manrope (via --font-heading). Give the family a default
+     heading weight + tight tracking so bare `font-heading` elements read as
+     proper premium sans headings; explicit font-* / tracking-* utilities
+     still win (they sit in the utilities layer). */
+  .font-heading {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
 }
 
-/* Centralized editorial typography scale. Display/title/section use the
-   Cormorant Garamond heading family; eyebrow/body use DM Sans. clamp()
-   keeps headings readable and prevents awkward wrapping on narrow screens. */
+/* Centralized typography scale. Display/title/section share the Manrope
+   heading family; eyebrow/body use Manrope too. clamp() keeps headings
+   readable and prevents awkward wrapping on narrow screens. */
 @layer components {
   .type-display {
     font-family: var(--font-heading);
-    font-size: clamp(2.65rem, 9vw, 4.75rem);
-    line-height: 1.02;
-    letter-spacing: -0.01em;
+    font-size: clamp(2.6rem, 8.5vw, 4.5rem);
+    font-weight: 600;
+    line-height: 1.0;
+    letter-spacing: -0.03em;
   }
   .type-page-title {
     font-family: var(--font-heading);
-    font-size: clamp(2.75rem, 6vw, 4.5rem);
-    line-height: 1.05;
-    letter-spacing: -0.005em;
+    font-size: clamp(2.6rem, 5.6vw, 4.25rem);
+    font-weight: 600;
+    line-height: 1.03;
+    letter-spacing: -0.028em;
   }
   .type-section-title {
     font-family: var(--font-heading);
-    font-size: clamp(2.1rem, 4.2vw, 3.25rem);
-    line-height: 1.1;
+    font-size: clamp(2.05rem, 4vw, 3.1rem);
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.022em;
   }
   .type-eyebrow {
     font-size: 0.75rem;

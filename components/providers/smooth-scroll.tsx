@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Lenis from "lenis";
 import { gsap, ScrollTrigger } from "@/lib/animations/gsap";
+import { setLenis } from "@/lib/animations/lenis-store";
 
 export function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -28,6 +29,9 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
       touchMultiplier: 2,
     });
 
+    // Expose this single instance so deep-link hash scrolling reuses it.
+    setLenis(lenis);
+
     // Single source of scroll truth: Lenis drives ScrollTrigger updates and
     // GSAP's ticker drives Lenis, so there is one rAF loop, not two.
     lenis.on("scroll", ScrollTrigger.update);
@@ -41,6 +45,7 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
       gsap.ticker.remove(onTick);
       gsap.ticker.lagSmoothing(500, 33);
       lenis.destroy();
+      setLenis(null);
       window.removeEventListener("load", refresh);
     };
   }, []);

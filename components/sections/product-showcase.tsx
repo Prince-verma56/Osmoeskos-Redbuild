@@ -61,7 +61,7 @@ export function ProductShowcase() {
     <section 
       id="product" 
       ref={sectionRef}
-      className="relative py-24 lg:py-40 px-6 md:px-12 lg:px-24 bg-background text-foreground -mt-16 pt-32 lg:-mt-32 lg:pt-56 pb-32 lg:pb-48 rounded-b-[4rem] lg:rounded-b-[8rem] z-20"
+      className="relative py-24 lg:py-40 px-6 md:px-12 lg:px-24 bg-background text-foreground -mt-16 pt-32 lg:-mt-32 lg:pt-56 pb-32 lg:pb-48 rounded-b-[4rem] lg:rounded-b-[8rem] z-20 scroll-mt-0"
     >
       <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center lg:items-start justify-between gap-16 lg:gap-20">
         

@@ -1,22 +1,17 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll";
+import { HashScrollHandler } from "@/components/providers/hash-scroll";
 import { Navigation } from "@/components/layout/navigation";
 import { PreloaderWrapper } from "@/components/layout/preloader-wrapper";
 import { Footer } from "@/components/layout/footer";
 
-const cormorantGaramond = Cormorant_Garamond({
-  variable: "--font-cormorant-garamond",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
-
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -29,10 +24,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("h-full", "antialiased", cormorantGaramond.variable, dmSans.variable, "font-sans")}
+      className={cn("h-full", "antialiased", manrope.variable, "font-sans")}
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-background">
         <SmoothScrollProvider>
+          <HashScrollHandler />
           <PreloaderWrapper>
             <Navigation />
             {children}

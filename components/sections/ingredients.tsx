@@ -53,7 +53,7 @@ export function Ingredients() {
   ];
 
   return (
-    <section ref={sectionRef} id="ingredients" className="relative py-24 lg:py-40 px-6 md:px-12 lg:px-24 bg-background z-0">
+    <section ref={sectionRef} id="ingredients" className="relative py-24 lg:py-40 px-6 md:px-12 lg:px-24 bg-background z-0 scroll-mt-20 lg:scroll-mt-24">
       <div className="w-full max-w-7xl mx-auto flex flex-col gap-14 lg:gap-20">
 
         {/* Header */}

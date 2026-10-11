@@ -13,27 +13,27 @@ export const searchIndex: SearchItem[] = [
   {
     title: "Triple Ceramide Complex",
     description: "Core technology featuring Ceramides NP, AP, and EOP to replenish essential lipids.",
-    href: "/product/body-lotion",
+    href: "/ingredients#triple-ceramide-complex",
   },
   {
     title: "Shea Butter",
     description: "A rich botanical butter (3%) that deeply moisturizes and softens dry skin.",
-    href: "/ingredients",
+    href: "/ingredients#shea-butter",
   },
   {
     title: "Coconut Oil",
     description: "Hydrating oil (2%) that locks in moisture and improves skin elasticity.",
-    href: "/ingredients",
+    href: "/ingredients#coconut-oil",
   },
   {
     title: "Niacinamide",
     description: "Vitamin B3 derivative (2%) that helps even skin tone and fortify the natural skin barrier.",
-    href: "/ingredients",
+    href: "/ingredients#niacinamide",
   },
   {
     title: "Vitamin E",
     description: "Powerful antioxidant (0.5%) that protects skin from free radicals.",
-    href: "/ingredients",
+    href: "/ingredients#vitamin-e",
   },
   {
     title: "Our Story",

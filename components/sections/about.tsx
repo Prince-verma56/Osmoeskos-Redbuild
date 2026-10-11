@@ -25,7 +25,7 @@ export function About() {
   );
 
   return (
-    <section ref={sectionRef} id="about" className="relative px-6 md:px-12 lg:px-24 bg-secondary -mt-16 pt-28 lg:-mt-32 lg:pt-48 pb-24 lg:pb-40 rounded-b-[4rem] lg:rounded-b-[8rem] z-30">
+    <section ref={sectionRef} id="about" className="relative px-6 md:px-12 lg:px-24 bg-secondary -mt-16 pt-28 lg:-mt-32 lg:pt-48 pb-24 lg:pb-40 rounded-b-[4rem] lg:rounded-b-[8rem] z-30 scroll-mt-0">
       <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
 
         {/* Left Media */}

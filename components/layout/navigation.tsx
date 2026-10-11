@@ -54,14 +54,16 @@ const megaMenus: Record<MenuKey, MegaMenu> = {
       },
       {
         title: "Thoughtful Body Care",
-        description: "Discover the signature lotion at the centre of OsmeKos.",
-        href: "/product/body-lotion",
+        description: "The everyday ritual at the heart of OsmeKos.",
+        href: "/about#thoughtful-care",
         image: "/images/Hero.png",
         imageAlt: "OsmeKos Body Lotion surrounded by botanical ingredients",
       },
     ],
     footerLink: { title: "Visit Our Story", href: "/about" },
   },
+  // NOTE: deep-link anchors below resolve to real sections — verified in
+  // app/product/body-lotion/page.tsx and app/ingredients/page.tsx.
   product: {
     trigger: "Product",
     href: "/product/body-lotion",
@@ -79,16 +81,21 @@ const megaMenus: Record<MenuKey, MegaMenu> = {
     items: [
       {
         title: "Triple Ceramide Complex",
-        description: "Explore the formula story.",
-        href: "/#formula",
+        description: "Jump straight to the formula details.",
+        href: "/product/body-lotion#formula",
       },
       {
         title: "Product Ingredients",
         description: "Meet the botanicals and actives in the formula.",
         href: "/ingredients",
       },
+      {
+        title: "Product Details",
+        description: "Texture, barrier benefits, and daily use.",
+        href: "/product/body-lotion#product-details",
+      },
     ],
-    footerLink: { title: "View Product Details", href: "/product/body-lotion" },
+    footerLink: { title: "View Product Details", href: "/product/body-lotion#product-details" },
   },
   ingredients: {
     trigger: "Ingredients",
@@ -101,30 +108,35 @@ const megaMenus: Record<MenuKey, MegaMenu> = {
       {
         title: "Shea Butter",
         description: "A rich botanical butter in the formula.",
-        href: "/ingredients",
+        href: "/ingredients#shea-butter",
         image: "/images/ingredient-shea-butter.jpg",
         imageAlt: "Shea butter",
       },
       {
         title: "Coconut Oil",
         description: "A familiar nourishing botanical.",
-        href: "/ingredients",
+        href: "/ingredients#coconut-oil",
         image: "/images/ingredient-coconut-oil.jpg",
         imageAlt: "Coconut oil",
       },
       {
         title: "Niacinamide",
         description: "Vitamin B3, used in the body-care formula.",
-        href: "/ingredients",
+        href: "/ingredients#niacinamide",
         image: "/images/ingredient-niacinamide.jpg",
         imageAlt: "Niacinamide ingredient",
       },
       {
         title: "Vitamin E",
         description: "An antioxidant that supports the formula.",
-        href: "/ingredients",
+        href: "/ingredients#vitamin-e",
         image: "/images/ingredient-vitamin-e.jpg",
         imageAlt: "Vitamin E ingredient",
+      },
+      {
+        title: "Triple Ceramide Complex",
+        description: "Ceramides NP, AP & EOP at the core of the formula.",
+        href: "/ingredients#triple-ceramide-complex",
       },
     ],
     footerLink: { title: "Explore All Ingredients", href: "/ingredients" },
@@ -146,13 +158,18 @@ const megaMenus: Record<MenuKey, MegaMenu> = {
     },
     items: [
       {
-        title: "Shop All",
-        description: "Visit the OsmeKos collection.",
+        title: "Body Lotion",
+        description: "The signature OsmeKos body lotion.",
+        href: "/product/body-lotion",
+      },
+      {
+        title: "Shop Collection",
+        description: "Visit the single-product OsmeKos collection.",
         href: "/shop",
       },
       {
         title: "Explore Ingredients",
-        description: "See the formula's four considered ingredients.",
+        description: "See the formula's considered ingredients.",
         href: "/ingredients",
       },
     ],
@@ -537,20 +554,6 @@ export function Navigation() {
             </Link>
 
             <nav aria-label="Primary navigation" className="hidden items-center gap-1 lg:flex">
-              <Link
-                href="/"
-                onClick={closeMenu}
-                aria-current={pathname === "/" ? "page" : undefined}
-                className={classes(
-                  "rounded-full px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]",
-                  pathname === "/"
-                    ? "bg-[#DCE3D4]/80 text-[#243526]"
-                    : "text-[#25291F]/75 hover:bg-[#EAE4D9]/85 hover:text-[#243526]",
-                )}
-              >
-                Home
-              </Link>
-
               {desktopMenuKeys.map((menuKey) => {
                 const menu = megaMenus[menuKey];
                 const isOpen = activeMenu === menuKey;
@@ -558,38 +561,67 @@ export function Navigation() {
                   (menuKey === "story" && pathname.startsWith("/about")) ||
                   (menuKey === "product" && pathname.startsWith("/product/body-lotion")) ||
                   (menuKey === "ingredients" && pathname.startsWith("/ingredients"));
+                const isHighlighted = isOpen || routeIsActive;
 
+                // Two distinct controls sharing one pill: the label is a link
+                // that navigates to the overview page; the chevron is a button
+                // that only toggles the mega-menu. Neither is nested in the
+                // other. Hovering the group opens the menu (non-touch only).
                 return (
-                  <button
+                  <div
                     key={menuKey}
-                    type="button"
-                    aria-expanded={isOpen}
-                    aria-controls={isOpen ? "osmekos-mega-menu" : undefined}
-                    onFocus={() => openMenu(menuKey)}
+                    className={classes(
+                      "group/nav flex items-center rounded-full transition-colors",
+                      isHighlighted
+                        ? "bg-[#DCE3D4]/80"
+                        : "hover:bg-[#EAE4D9]/85",
+                    )}
                     onPointerEnter={(event) => {
                       if (event.pointerType !== "touch") openMenu(menuKey);
                     }}
-                    onClick={() =>
-                      setActiveMenu((current) =>
-                        current === menuKey ? null : menuKey,
-                      )
-                    }
-                    className={classes(
-                      "inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]",
-                      isOpen || routeIsActive
-                        ? "bg-[#DCE3D4]/80 text-[#243526]"
-                        : "text-[#25291F]/75 hover:bg-[#EAE4D9]/85 hover:text-[#243526]",
-                    )}
                   >
-                    {menu.trigger}
-                    <ChevronDown
+                    <Link
+                      href={menu.href}
+                      onClick={closeMenu}
+                      aria-current={routeIsActive ? "page" : undefined}
                       className={classes(
-                        "size-3.5 transition-transform duration-200",
-                        isOpen && "rotate-180",
+                        "rounded-full py-2 pl-3.5 pr-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]",
+                        isHighlighted
+                          ? "text-[#243526]"
+                          : "text-[#25291F]/75 group-hover/nav:text-[#243526]",
                       )}
-                      aria-hidden="true"
-                    />
-                  </button>
+                    >
+                      {menu.trigger}
+                    </Link>
+                    <button
+                      type="button"
+                      aria-expanded={isOpen}
+                      aria-controls={isOpen ? "osmekos-mega-menu" : undefined}
+                      aria-label={
+                        (isOpen ? "Close " : "Open ") + menu.trigger + " menu"
+                      }
+                      onFocus={() => openMenu(menuKey)}
+                      onClick={() =>
+                        setActiveMenu((current) =>
+                          current === menuKey ? null : menuKey,
+                        )
+                      }
+                      className={classes(
+                        "inline-flex items-center rounded-full py-2 pl-1 pr-3 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]",
+                        isHighlighted
+                          ? "text-[#243526]"
+                          : "text-[#25291F]/75 group-hover/nav:text-[#243526]",
+                      )}
+                    >
+                      <ChevronDown
+                        className={classes(
+                          "size-3.5 transition-transform duration-200",
+                          isOpen && "rotate-180",
+                        )}
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </div>
                 );
               })}
             </nav>
@@ -649,18 +681,19 @@ export function Navigation() {
                 className="w-[calc(100vw-1.5rem)] border-[#EAE4D9] bg-[#F7F5EF] p-0 text-[#25291F] sm:w-[24rem]"
               >
                 <div className="flex h-full flex-col overscroll-contain overflow-y-auto px-6 pb-8 pt-8 touch-pan-y">
-                  <SheetTitle className="pr-10 font-heading text-3xl text-[#243526]">
+                  <SheetTitle
+                    className="w-fit pr-10 font-heading text-3xl text-[#243526] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B7A06B]"
+                    render={
+                      <Link
+                        href="/"
+                        onClick={() => setMobileOpen(false)}
+                        aria-label="OsmeKos home"
+                      />
+                    }
+                  >
                     OsmeKos
                   </SheetTitle>
                   <nav aria-label="Mobile navigation" className="mt-9 flex flex-col">
-                    <Link
-                      href="/"
-                      onClick={() => setMobileOpen(false)}
-                      className="border-b border-[#243526]/10 py-4 text-base font-medium text-[#243526] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]"
-                    >
-                      Home
-                    </Link>
-
                     {desktopMenuKeys.map((menuKey) => {
                       const menu = megaMenus[menuKey];
                       const mobileItems = [
