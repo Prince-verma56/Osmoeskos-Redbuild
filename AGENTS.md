@@ -370,3 +370,57 @@ The footer now uses the "sticky reveal" pattern: it is pinned behind the page an
 ### Verified (Phase 17)
 - `tsc --noEmit` clean; `eslint` clean; `next build` prerenders all 7 routes as static.
 - Not browser-verified here. Manual QA: scroll to the bottom on each route and confirm the footer is uncovered cleanly (content slides up over it, no ivory gap, settles flush); nav/search/mega-menu still overlay correctly; preloader still covers everything on first load.
+
+## Phase 18 Decisions — Signature Immersive Experiences (Horizontal Story + Scroll-Scrubbed Video)
+
+Scope this pass (confirmed with the user): add the two headline interactive experiences only. Editorial-section refinement (Part 6) and the interactive ingredient explorer (Part 7 — brief arrived truncated) are deferred to a follow-up.
+
+### Audit finding — off-brand assets present (do NOT use)
+- `public/images/hero-product.jpg` and `public/images/product-detail.jpg` are **byte-identical** (same md5) and depict an **"AURA Botanical Essence" bottle — a different brand**. They are **unused** in any `.tsx` (no live violation). Per the standing rule "Do not use Seed or Aura product imagery as OsmeKos," these were left in place but must never be referenced. Authentic OsmeKos product stills are `osmekos-hero-landscape.jpg` (OsmeKos Premium Body Lotion, botanical interior) and `osmekos-product-detail.jpg` (portrait bottle). Candidate for deletion in a cleanup pass.
+
+### Homepage order (overlap chain preserved)
+`Hero → About → ProductShowcase → HorizontalStory (new) → ScrollVideo (new) → FormulaStorytelling → Ingredients`. The proven Hero→About→ProductShowcase negative-margin/rounded-b/descending-z overlap chain was left untouched; the two new full-bleed sections are appended after it, before the existing green Formula + Ingredients. Asset mapping avoids any directly-adjacent image repeat: HorizontalStory uses `osmekos-product-detail` (P1), typographic ceramides (P2), the four `ingredient-*.jpg` (P3), and `Luminous Lotion on Dewy Skin.png` (P4); ScrollVideo poster uses `osmekos-hero-landscape.jpg`; Formula keeps `Luminous Lotion on Dewy Skin.png`. hero-landscape (ProductShowcase↔video poster) and Luminous (P4↔Formula) are each separated by one full section.
+
+### Signature A — Horizontal Product Storytelling (`components/sections/horizontal-story.tsx`, client)
+- Desktop (`min-width:1024px` + no-reduced-motion, via `gsap.matchMedia`): the section pins and a flex-row track translates in `x` from vertical scroll. Distance is **measured** (`track.scrollWidth - innerWidth`) with `invalidateOnRefresh` + function-based `end`, so it adapts to any viewport and the last panel finishes flush (no trailing blank). `scrub: 1`, `anticipatePin: 1`. A top progress bar + NN/NN counter reflect true `self.progress`.
+- Four panels: 01 Daily Ritual (product + copy), 02 Triple Ceramide Complex (typographic NP/AP/EOP — no invented science), 03 Botanical Ingredients (the four `ingredients` from `lib/osmekos-data.ts`), 04 Texture & Feel (full-bleed Luminous image + CTA).
+- Mobile / reduced motion: identical panels render as a normal **vertical** stack (`flex-col`), no pin, no trap — all copy available without JS. `overflow-hidden` on the section prevents horizontal page overflow. matchMedia cleanup kills the ST/tween and clears the track transform on resize/unmount.
+
+### Signature B — Scroll-Controlled Video Scrubbing (`components/sections/scroll-video.tsx`, client, reusable)
+- Binds `video.currentTime = progress * duration` through a scrubbed ScrollTrigger (pin + `scrub: 1`, pinned distance = `scrubViewportHeights` × viewport height, default 2.2). Scrolling up reverses the timeline. Props-driven (`src`, `poster`, copy, scrub distance) for reuse.
+- **Defensive readiness:** scrub initialises only once valid `duration` metadata exists; never seeks before `readyState >= 2`; skips redundant seeks within a ~1-frame epsilon; tears down ST + tween on unmount / media-query change. No repeated `load()` calls; listeners attached once per matchMedia context.
+- **No video asset exists yet.** `public/videos/` holds only `.gitkeep`; real footage cannot be generated here. The component is wired to the configurable path **`/videos/osmekos-body-lotion-story.mp4`** and renders a **premium poster fallback** (`osmekos-hero-landscape.jpg`) via `<Image>` when the source is missing/errors, plus a **dev-only note** documenting the required asset. No stock or other-brand video is substituted. Encoding spec is documented in the component header (H.264 MP4, frequent keyframes ~0.25–0.5s for smooth seeking, consistent fps, ~1080p, no audio track, matching poster). Dropping a conforming file at that path activates the full scrub with no code change.
+- Fallbacks: reduced motion / `<768px` → no pin/scrub, poster + all copy render normally. `muted playsInline preload="auto"`, not autoplay.
+
+### Verified (Phase 18)
+- `tsc --noEmit` clean; `eslint` clean (new files); `next build` compiles and prerenders all 7 routes as static (homepage stays static with the two new client islands).
+- Dev server: `/`, `/about`, `/ingredients`, `/product/body-lotion`, `/shop` all HTTP 200; both new section ids (`#story`, `#film`) present in server-rendered HTML (content available without JS).
+- **Not browser-verified** (no browser automation in this environment). Recommended manual QA: desktop pinned horizontal scroll (continuous feel, progress bar accuracy, last panel flush, clean release into ScrollVideo); ScrollVideo poster fallback + dev note today, and scrub behaviour once a real MP4 is added (first/last frame, reverse-on-scroll-up, release, resize, route-change cleanup); mobile/reduced-motion vertical fallbacks for both; no horizontal overflow at 1440/1024/768/390/375/320px.
+
+## Phase 19 Decisions — Robust Horizontal Pinning, Scene-by-Scene Staggers, Route Alignment & Bidirectional Parallax
+
+### Horizontal Story Pinning & Layout Refactor (`components/sections/horizontal-story.tsx`)
+- **Full-Screen Scenes (`100vw`):** Each of the 4 horizontal story scenes now uses full viewport width (`lg:w-screen`) on desktop, eliminating half-panel cutoffs and awkward margins.
+- **Guaranteed Pin Duration:** Scroll distance is guaranteed at `Math.max(window.innerWidth * (panelCount - 1), totalPanelsWidth - window.innerWidth)`, completely preventing premature unpinning or lower sections overlapping Scene 2.
+- **Eliminated ResizeObserver Loop in `SmoothScrollProvider`:** Removed the body `ResizeObserver` that was repeatedly calling `ScrollTrigger.refresh()` every time a `.pin-spacer` altered the body height. Replaced with clean window resize debouncing.
+- **Block Layout `<main>`:** Removed `flex flex-col` from `<main>` in `app/page.tsx` (`relative w-full min-h-screen`) to prevent flex item compression on ScrollTrigger pin-spacers.
+- **Phase-by-Phase Scene Animations:** Built a master timeline where internal scene elements animate in sequence as each scene enters:
+  - Scene 1: Soft exit fade.
+  - Scene 2: Header rises into place, then the 3 barrier ceramides (NP, AP, EOP) stagger in one by one.
+  - Scene 3: Header rises into place, then the 4 botanical ingredient cards stagger & lift in with a subtle scale settle.
+  - Scene 4: Background cream texture settles from scale (`1.14 -> 1.0`), and editorial headline + CTA button bloom into place.
+  - **Bidirectional Smoothness:** All animations scrub seamlessly both forward and in reverse when scrolling back up.
+
+### Route Alignment
+- Added `/our-story` route (`app/our-story/page.tsx`) matching the "Our Story" navigation label.
+- `/about` seamlessly redirects to `/our-story`.
+- Added `/product` route redirecting to `/product/body-lotion`.
+- Updated all navigation links, mega-menus, footer, and search index to use `/our-story`.
+
+### Parallax Smoothing on Reverse Scroll
+- Updated `scrub: true` to `scrub: 1.2` in `components/sections/formula-storytelling.tsx`.
+- Enabled GSAP ticker lag smoothing (`lagSmoothing(500, 33)`) in `components/providers/smooth-scroll.tsx` for fluid reverse scroll without snapping.
+
+### Verified (Phase 19)
+- `tsc --noEmit` clean; `next build` compiles all 9 static routes cleanly (`/`, `/_not-found`, `/about`, `/ingredients`, `/our-story`, `/product`, `/product/body-lotion`, `/search`, `/shop`).
+

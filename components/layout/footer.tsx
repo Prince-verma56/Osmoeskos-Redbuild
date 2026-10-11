@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 const exploreLinks = [
   { href: "/product/body-lotion", label: "Body Lotion" },
-  { href: "/about", label: "Our Story" },
+  { href: "/our-story", label: "Our Story" },
   { href: "/ingredients", label: "Ingredients" },
   { href: "/shop", label: "The Collection" },
 ];

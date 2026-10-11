@@ -38,7 +38,7 @@ export const searchIndex: SearchItem[] = [
   {
     title: "Our Story",
     description: "Learn about OsmeKos and our philosophy rooted in botanical science.",
-    href: "/about",
+    href: "/our-story",
   },
 ];
 

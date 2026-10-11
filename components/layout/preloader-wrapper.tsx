@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Preloader } from "@/components/layout/preloader";
+import { ScrollTrigger } from "@/lib/animations/gsap";
 
 export function PreloaderWrapper({ children }: { children: React.ReactNode }) {
   const [showPreloader, setShowPreloader] = useState(false);
@@ -25,6 +26,9 @@ export function PreloaderWrapper({ children }: { children: React.ReactNode }) {
     sessionStorage.setItem("osmekos-preloader-seen", "1");
     setPreloaderDone(true);
     setShowPreloader(false);
+    requestAnimationFrame(() => {
+      ScrollTrigger.refresh();
+    });
   }, []);
 
   return (

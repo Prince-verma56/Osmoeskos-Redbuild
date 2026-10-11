@@ -33,7 +33,7 @@ type MegaMenu = {
 const megaMenus: Record<MenuKey, MegaMenu> = {
   story: {
     trigger: "Our Story",
-    href: "/about",
+    href: "/our-story",
     eyebrow: "Our Story",
     title: "Rooted in Thoughtful Care",
     description: "Explore the considered approach behind OsmeKos body care.",
@@ -41,26 +41,26 @@ const megaMenus: Record<MenuKey, MegaMenu> = {
       {
         title: "Our Philosophy",
         description: "The point of view that guides our daily rituals.",
-        href: "/about#philosophy",
+        href: "/our-story#philosophy",
         image: "/images/osmekos-about-lifestyle.jpg",
         imageAlt: "A quiet body-care ritual in a botanical interior",
       },
       {
         title: "Formulation Philosophy",
         description: "A closer look at our balanced approach to body care.",
-        href: "/about#formulation-philosophy",
+        href: "/our-story#formulation-philosophy",
         image: "/images/osmekos-formula-bg.jpg",
         imageAlt: "Cream formula with dried botanicals",
       },
       {
         title: "Thoughtful Body Care",
         description: "The everyday ritual at the heart of OsmeKos.",
-        href: "/about#thoughtful-care",
+        href: "/our-story#thoughtful-care",
         image: "/images/Hero.png",
         imageAlt: "OsmeKos Body Lotion surrounded by botanical ingredients",
       },
     ],
-    footerLink: { title: "Visit Our Story", href: "/about" },
+    footerLink: { title: "Visit Our Story", href: "/our-story" },
   },
   // NOTE: deep-link anchors below resolve to real sections — verified in
   // app/product/body-lotion/page.tsx and app/ingredients/page.tsx.
@@ -558,8 +558,8 @@ export function Navigation() {
                 const menu = megaMenus[menuKey];
                 const isOpen = activeMenu === menuKey;
                 const routeIsActive =
-                  (menuKey === "story" && pathname.startsWith("/about")) ||
-                  (menuKey === "product" && pathname.startsWith("/product/body-lotion")) ||
+                  (menuKey === "story" && (pathname.startsWith("/our-story") || pathname.startsWith("/about"))) ||
+                  (menuKey === "product" && (pathname.startsWith("/product/body-lotion") || pathname === "/product")) ||
                   (menuKey === "ingredients" && pathname.startsWith("/ingredients"));
                 const isHighlighted = isOpen || routeIsActive;
 
