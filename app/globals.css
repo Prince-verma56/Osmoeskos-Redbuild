@@ -128,7 +128,9 @@
   }
   html {
     @apply font-sans;
-    scroll-padding-top: 6rem;
+    /* No scroll-padding-top: the JS HashScrollHandler computes an exact
+       numeric target from each section's scroll-margin-top, and a global
+       scroll-padding would double-offset it (Phase 13). */
   }
   /* Headings use Manrope (via --font-heading). Give the family a default
      heading weight + tight tracking so bare `font-heading` elements read as

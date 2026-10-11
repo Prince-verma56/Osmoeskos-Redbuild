@@ -269,3 +269,104 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - All routes (`/`, `/product/body-lotion`, `/about`, `/ingredients`, `/shop`, `/search`) return HTTP 200 on local dev server.
 - Mega-menu hash links and deep links now smoothly glide and frame directly to the intended section top.
 
+## Phase 14 Decisions — Route-Page Scroll-Reveal Motion System
+
+### Goal
+Bring the static route pages (About / Product / Ingredients) up to the homepage's motion quality with restrained, "award-site" entrances — without risking invisible content or fighting the Phase 13 anchor math.
+
+### Reusable primitives (client islands wrapping server markup)
+- `components/animations/reveal-heading.tsx` — **signature masked word reveal.** Splits a heading into words, each rising out of its own `overflow-hidden` clip in a quick stagger. Full text exposed via `aria-label`; word spans `aria-hidden`. Props: `text`, `as`, `className`, `delay`, `stagger`, `start`.
+- `components/animations/reveal.tsx` — generic `Reveal` wrapper: fade+rise, optional child `stagger`, or `media` mode (wrapper fades/rises while the inner `<img>` settles from a gentle over-scale). Props: `y`, `delay`, `duration`, `stagger`, `start`, `media`.
+- Both set their initial hidden state in a `useGSAP` **layout effect (before paint)** → no FOUC; both **return early under `prefersReducedMotion()`** leaving content fully visible; both use `autoAlpha` (visibility preserves layout, so anchor targets never shift) and `once: true` through the shared GSAP/ScrollTrigger + Lenis pipeline — no second rAF loop, consistent with Phase 09.
+
+### Ceramide cards
+- `components/sections/ceramide-cards.tsx` is now a client component that reveals its three cards in a stagger (rise + slight scale) with the icon emblems easing in on `back.out` just behind — used on both Product `#formula` and Ingredients `#triple-ceramide-complex`.
+
+### Application
+- **Headings** (page H1s + major section titles) → `RevealHeading` (masked words).
+- **Feature images** → `Reveal media` (fade/rise + inner image over-scale settle).
+- **Supporting text + CTAs** → `Reveal` with small `stagger`/`delay` so eyebrow→heading→body→button cascade.
+- **Card groups** (ceramide cards, product Key-Ingredients grid) → staggered reveal.
+- Homepage sections keep their existing GSAP; CeramideCards appears only on route pages — no element is animated by two systems.
+
+### Reconciliation note
+- `scroll-padding-top: 6rem` was briefly re-added to `html` then **removed again** to stay consistent with Phase 13's numeric-target anchor math (a global scroll-padding double-offsets it). Anchor offset now comes solely from each section's `scroll-mt-*` read by `HashScrollHandler`.
+
+### Verified (Phase 14)
+- `tsc --noEmit` clean; `eslint` clean; `next build` prerenders all 7 routes as static.
+- **Not browser-verified** (no automation here). Manual QA: masked heading reveals on About/Product/Ingredients; image settle; card staggers; that deep-link glides still frame correctly (reveals use transforms/visibility, so they don't shift targets); reduced-motion leaves everything visible.
+
+## Phase 15 Decisions — Hydration Mismatch Resolution & LCP Image Optimization
+
+### 1. Hydration Mismatch Fix in `RevealHeading`
+- **Root Cause:** In `components/animations/reveal-heading.tsx`, the word clipping span used `mb-[-0.15em]`. While the SSR renderer output this literal string into the initial HTML, the Tailwind v4 / Turbopack compiler normalized arbitrary negative utility classes on the client to canonical `-mb-[0.15em]`. React 19 detected this class name attribute mismatch during hydration (`mb-[-0.15em]` vs `-mb-[0.15em]`) and logged an unpatched tree hydration mismatch error.
+- **Fix:** Changed the clipping span class in `reveal-heading.tsx` to the canonical Tailwind CSS v4 syntax: `-mb-[0.15em]`. Both server HTML and client VDOM now render identical class strings (`inline-block overflow-hidden pb-[0.15em] -mb-[0.15em] align-bottom`), completely eliminating the hydration mismatch.
+
+### 2. Largest Contentful Paint (LCP) Image Optimization
+- **Root Cause:** Next.js development and production audit flagged above-the-fold images as Largest Contentful Paint (LCP) candidates that were missing `priority` (or using legacy `loading="eager"` without `priority`).
+- **Fixes Applied:**
+  - `app/about/page.tsx`: Replaced `loading="eager"` on the hero lifestyle image (`/images/osmekos-about-lifestyle.jpg`) with `priority` and responsive `sizes="(max-width: 1024px) 100vw, 80vw"`.
+  - `app/shop/page.tsx`: Added `priority` to the above-the-fold featured product hero image (`/images/osmekos-hero-landscape.jpg`).
+  - `app/ingredients/page.tsx`: Added `priority={index === 0}` to preload the first ingredient hero image (`Shea Butter`) when visiting `/ingredients` or `/ingredients#shea-butter`.
+  - Confirmed `components/sections/hero.tsx` and `app/product/body-lotion/page.tsx` already carry `priority`.
+
+### Verified (Phase 15)
+- `tsc --noEmit` passed with 0 errors.
+- `next build` compiled and prerendered all 7 routes as static content without errors or warnings.
+
+## Phase 16 Decisions — Homepage Animation Parity (Editorial Media & Element Reveals)
+
+### Objective
+Apply the exact same editorial animation language introduced on Our Story (`/about`), Product (`/product/body-lotion`), and Ingredients (`/ingredients`) across the Homepage (`/`):
+1. **Signature Media Image Reveals (`Reveal media`):** Container fades and rises (`y: 30`, `autoAlpha: 0`) while the inner `<img>` settles from a gentle over-scale (`scale: 1.18 -> 1`, `duration: 1.4s`, `ease: "power3.out"`) with `clearProps: "transform"` so subsequent hover effects remain fluid.
+2. **Masked Heading Reveals (`RevealHeading`):** Words rise out of `overflow-hidden` clipping masks in a quick stagger with `power4.out`. Added optional `id` prop support to preserve anchor and `aria-labelledby` semantics.
+3. **Element Cascades (`Reveal`):** Supporting eyebrows, descriptive paragraphs, CTA buttons, and badges cascade into view with coordinated delays and easing.
+
+### Implementation Across Homepage Sections
+- **Hero (`components/sections/hero.tsx`):**
+  - Background image (`Hero.png`) settles on mount with subtle zoom-in (`scale: 1.12 -> 1.0`, `duration: 1.8s`, `ease: "power3.out"`).
+  - Main H1 (`Deep Hydration, Every Day.`) upgraded to `<RevealHeading as="h1">` (masked words).
+  - Eyebrow, description, and CTA buttons cascade smoothly with `<Reveal delay={...} start="top bottom">`.
+- **About (`components/sections/about.tsx`):**
+  - Lifestyle ritual image (`osmekos-about-lifestyle.jpg`) upgraded to `<Reveal media>` (inner image settles from `scale: 1.18`).
+  - H2 (`Care That Goes Beyond the Surface.`) upgraded to `<RevealHeading as="h2">`.
+  - Eyebrow, body, and Triple Ceramide callout card cascade with `<Reveal>`.
+- **Product Showcase (`components/sections/product-showcase.tsx`):**
+  - Main landscape product image (`osmekos-hero-landscape.jpg`) upgraded to `<Reveal media>`.
+  - Both bottom image tiles (`about-skincare.jpg` and `osmekos-formula-bg.jpg`) upgraded to `<Reveal media delay={...}>`.
+  - Center 3% Shea Butter stat card cascades with `<Reveal delay={0.18}>`.
+  - H2 (`Daily essentials for barrier health.`) upgraded to `<RevealHeading as="h2">`.
+  - Left eyebrow, body copy, and Shop CTA cascade with `<Reveal>`.
+- **Formula Storytelling (`components/sections/formula-storytelling.tsx`):**
+  - Parallax cream texture scrub preserved.
+  - H2 (`More than a lotion.`) upgraded to `<RevealHeading as="h2">`.
+  - Eyebrow, body copy, product CTA, and daily ritual benefits card cascade with `<Reveal>`.
+- **Ingredients (`components/sections/ingredients.tsx`):**
+  - All four ingredient images (Shea Butter, Coconut Oil, Niacinamide, Vitamin E) upgraded to `<Reveal media delay={index * 0.08}>`, creating a staggered focus-in settle across the botanical grid.
+  - H2 titles (`Thoughtful Ingredients. Everyday Care.`) upgraded to `<RevealHeading as="h2">`.
+  - Eyebrows, descriptive cards, and "View All Ingredients" link cascade with coordinated delays.
+
+### Core Enhancements
+- In `components/animations/reveal.tsx`, added `clearProps: "transform"` so that CSS `:hover` animations (e.g. `group-hover:scale-105` or `-translate-y-2`) work cleanly without inline transform locks once reveals complete.
+- In `components/animations/reveal-heading.tsx`, added `id?: string` prop passed to the wrapping Tag element.
+
+### Verified (Phase 16)
+- `tsc --noEmit` passed with 0 errors.
+- `next build` compiled and prerendered all 7 routes without warnings.
+
+
+
+
+## Phase 17 Decisions — Footer Reveal-From-Behind
+
+The footer now uses the "sticky reveal" pattern: it is pinned behind the page and the content slides up to uncover it, so it rises into view (text and all) as you reach the bottom. Pure layout + one height measurement — no scroll-driven JS animation (cheap, and naturally fine under reduced motion).
+
+- **`app/layout.tsx`:** page content (Navigation + `{children}`) is wrapped in an **opaque content layer** — `relative z-10 flex min-h-screen flex-col bg-background` — that sits above the footer and covers it until scrolled past.
+- **`components/layout/footer.tsx`** (client): renders a transparent **spacer** whose height is the footer's measured `offsetHeight` (via `ResizeObserver`), then the footer itself as `fixed inset-x-0 bottom-0 z-0`. The spacer reserves exactly footer-height of scroll; as the content layer slides up into that zone, the fixed footer is revealed behind it and settles flush (no gap). `mt-auto` removed.
+- **Stacking:** body background (back) → spacer (in-flow) → fixed footer (`z-0`, positioned) → content layer (`z-10`). `z-10`/`relative` creates a stacking context but **not** a containing block for `position: fixed` (only transform/filter/perspective do), so the fixed navbar/overlays inside still anchor to the viewport.
+- No change to scroll height semantics for anchors: hash targets live in the content layer; the spacer only adds reveal distance at the very end, so the Phase 13 numeric-target hash math is untouched.
+- Edge: if the footer is ever taller than the viewport (very small screens), only its lower portion reveals at once — acceptable.
+
+### Verified (Phase 17)
+- `tsc --noEmit` clean; `eslint` clean; `next build` prerenders all 7 routes as static.
+- Not browser-verified here. Manual QA: scroll to the bottom on each route and confirm the footer is uncovered cleanly (content slides up over it, no ivory gap, settles flush); nav/search/mega-menu still overlay correctly; preloader still covers everything on first load.

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Metadata } from "next";
 import { ingredients } from "@/lib/osmekos-data";
 import { CeramideCards } from "@/components/sections/ceramide-cards";
+import { Reveal } from "@/components/animations/reveal";
+import { RevealHeading } from "@/components/animations/reveal-heading";
 
 export const metadata: Metadata = {
   title: "Ingredients | OsmeKos",
@@ -15,13 +17,20 @@ export default function IngredientsPage() {
     <main className="flex min-h-screen flex-col w-full bg-background pt-32 pb-0">
       {/* Page Header */}
       <section className="w-full max-w-5xl mx-auto px-6 md:px-12 lg:px-24 mb-16 text-center lg:mb-20">
-        <span className="type-eyebrow text-accent mb-6 block">Transparent Formulation</span>
-        <h1 className="type-page-title text-foreground mb-8">
-          The Science of <br className="hidden sm:block" />Nature.
-        </h1>
-        <p className="type-body text-muted-foreground max-w-2xl mx-auto">
-          We believe in full transparency. Our formula combines the restorative power of botanicals with carefully chosen actives to nurture and protect your skin.
-        </p>
+        <Reveal className="mb-6">
+          <span className="type-eyebrow text-accent block">Transparent Formulation</span>
+        </Reveal>
+        <RevealHeading
+          as="h1"
+          className="type-page-title text-foreground mb-8"
+          text="The Science of Nature."
+          delay={0.05}
+        />
+        <Reveal delay={0.2}>
+          <p className="type-body text-muted-foreground max-w-2xl mx-auto">
+            We believe in full transparency. Our formula combines the restorative power of botanicals with carefully chosen actives to nurture and protect your skin.
+          </p>
+        </Reveal>
       </section>
 
       {/* Triple Ceramide Complex — deep-green feature area, one of the few
@@ -34,11 +43,20 @@ export default function IngredientsPage() {
           <div className="flex flex-col gap-12 p-7 md:p-12 lg:p-16">
             <div className="flex flex-col gap-10 md:flex-row md:items-end md:justify-between">
               <div className="max-w-xl">
-                <span className="type-eyebrow text-primary-foreground/60 mb-4 block">Core Technology</span>
-                <h2 className="font-heading text-4xl md:text-5xl leading-[1.05]">Triple Ceramide Complex</h2>
-                <p className="type-body text-primary-foreground/80 mt-5">
-                  Ceramides are lipids found naturally in the skin barrier. Our formula brings together Ceramides NP, AP, and EOP as part of an everyday, skin-first body-care routine.
-                </p>
+                <Reveal className="mb-4">
+                  <span className="type-eyebrow text-primary-foreground/60 block">Core Technology</span>
+                </Reveal>
+                <RevealHeading
+                  as="h2"
+                  className="font-heading text-4xl md:text-5xl leading-[1.05]"
+                  text="Triple Ceramide Complex"
+                  delay={0.05}
+                />
+                <Reveal delay={0.2}>
+                  <p className="type-body text-primary-foreground/80 mt-5">
+                    Ceramides are lipids found naturally in the skin barrier. Our formula brings together Ceramides NP, AP, and EOP as part of an everyday, skin-first body-care routine.
+                  </p>
+                </Reveal>
               </div>
             </div>
 
@@ -67,7 +85,8 @@ export default function IngredientsPage() {
               id={ingredient.id}
               className="grid grid-cols-1 items-center gap-10 scroll-mt-20 lg:scroll-mt-24 lg:grid-cols-2 lg:gap-16"
             >
-              <div
+              <Reveal
+                media
                 className={
                   "relative aspect-[4/3] w-full overflow-hidden rounded-[2rem] bg-muted lg:aspect-[5/4] lg:rounded-[2.5rem] " +
                   (mediaFirst ? "lg:order-1" : "lg:order-2")
@@ -77,11 +96,13 @@ export default function IngredientsPage() {
                   src={ingredient.image}
                   alt={ingredient.imageAlt}
                   fill
+                  priority={index === 0}
                   className="object-cover object-center"
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
-              </div>
-              <div
+              </Reveal>
+              <Reveal
+                stagger={0.1}
                 className={
                   "flex flex-col items-start gap-5 " +
                   (mediaFirst ? "lg:order-2" : "lg:order-1")
@@ -99,7 +120,7 @@ export default function IngredientsPage() {
                 >
                   See it in the Body Lotion <span aria-hidden="true" className="btn-premium__arrow">&rarr;</span>
                 </Link>
-              </div>
+              </Reveal>
             </section>
           );
         })}

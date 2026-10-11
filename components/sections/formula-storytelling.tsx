@@ -7,6 +7,8 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/animations/gsap";
 import { prefersReducedMotion } from "@/lib/animations/reveal";
+import { Reveal } from "@/components/animations/reveal";
+import { RevealHeading } from "@/components/animations/reveal-heading";
 
 const benefits = [
   { icon: Droplet, title: "Deep & Long-lasting Hydration" },
@@ -17,8 +19,6 @@ const benefits = [
 
 export function FormulaStorytelling() {
   const sectionRef = useRef<HTMLElement>(null);
-  const leftContentRef = useRef<HTMLDivElement>(null);
-  const rightListRef = useRef<HTMLDivElement>(null);
   const backgroundRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
@@ -26,33 +26,6 @@ export function FormulaStorytelling() {
       if (prefersReducedMotion()) {
         return;
       }
-
-      const timeline = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top 78%",
-          once: true,
-        },
-      });
-
-      timeline
-        .from(leftContentRef.current, {
-          y: 32,
-          autoAlpha: 0,
-          duration: 0.8,
-          ease: "power3.out",
-        })
-        .from(
-          rightListRef.current?.children ?? [],
-          {
-            x: 24,
-            autoAlpha: 0,
-            duration: 0.6,
-            stagger: 0.12,
-            ease: "power2.out",
-          },
-          "-=0.45",
-        );
 
       gsap.to(backgroundRef.current, {
         yPercent: 7,
@@ -118,28 +91,39 @@ export function FormulaStorytelling() {
       </svg>
 
       <div className="relative z-10 mx-auto grid w-full max-w-[88rem] grid-cols-1 items-center gap-12 py-8 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.78fr)] lg:gap-16 xl:gap-24">
-        <div ref={leftContentRef} className="max-w-xl">
-          <p className="mb-5 text-[0.6875rem] font-semibold uppercase tracking-[0.24em] text-[#F3EAD8]/75">
-            Everyday Barrier Care
-          </p>
-          <h2 id="formula-heading" className="max-w-md font-heading text-5xl leading-[0.95] text-[#F9F5EB] md:text-6xl lg:text-7xl">
-            More than <span className="italic">a lotion.</span>
-          </h2>
-          <p className="mt-7 max-w-md text-base leading-relaxed text-[#F7F5EF]/85 md:text-lg">
-            A lightweight, non-greasy formula that absorbs quickly, leaving your skin soft, supple, and beautifully hydrated.
-          </p>
-          <Link
-            href="/product/body-lotion"
-            className="btn-premium btn-premium--light mt-8 inline-flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F7F5EF]"
-          >
-            Discover the product
-            <span aria-hidden="true" className="btn-premium__arrow">→</span>
-          </Link>
+        <div className="max-w-xl">
+          <Reveal>
+            <p className="mb-5 text-[0.6875rem] font-semibold uppercase tracking-[0.24em] text-[#F3EAD8]/75">
+              Everyday Barrier Care
+            </p>
+          </Reveal>
+          <RevealHeading
+            as="h2"
+            id="formula-heading"
+            className="max-w-md font-heading text-5xl leading-[0.95] text-[#F9F5EB] md:text-6xl lg:text-7xl"
+            text="More than a lotion."
+            delay={0.05}
+          />
+          <Reveal delay={0.16}>
+            <p className="mt-7 max-w-md text-base leading-relaxed text-[#F7F5EF]/85 md:text-lg">
+              A lightweight, non-greasy formula that absorbs quickly, leaving your skin soft, supple, and beautifully hydrated.
+            </p>
+          </Reveal>
+          <Reveal delay={0.24}>
+            <Link
+              href="/product/body-lotion"
+              className="btn-premium btn-premium--light mt-8 inline-flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F7F5EF]"
+            >
+              Discover the product
+              <span aria-hidden="true" className="btn-premium__arrow">→</span>
+            </Link>
+          </Reveal>
         </div>
 
         <div className="justify-self-stretch lg:justify-self-end lg:max-w-md">
-          <div
-            ref={rightListRef}
+          <Reveal
+            delay={0.15}
+            y={24}
             className="rounded-[2rem] border border-[#F7F5EF]/35 bg-[#F7F5EF]/15 p-6 shadow-[0_1.5rem_4rem_rgba(13,27,17,0.18)] backdrop-blur-md md:p-8"
           >
             <p className="mb-6 text-[0.625rem] font-semibold uppercase tracking-[0.22em] text-[#F7F5EF]/70">
@@ -155,7 +139,7 @@ export function FormulaStorytelling() {
                 </li>
               ))}
             </ul>
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>

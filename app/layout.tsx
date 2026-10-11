@@ -30,8 +30,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SmoothScrollProvider>
           <HashScrollHandler />
           <PreloaderWrapper>
-            <Navigation />
-            {children}
+            {/* Opaque content layer sits ABOVE the footer and slides up over
+                it on scroll; the footer is revealed from behind at the end. */}
+            <div className="relative z-10 flex min-h-screen flex-col bg-background">
+              <Navigation />
+              {children}
+            </div>
             <Footer />
           </PreloaderWrapper>
         </SmoothScrollProvider>

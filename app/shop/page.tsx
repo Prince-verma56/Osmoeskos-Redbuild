@@ -31,6 +31,7 @@ export default function ShopPage() {
               src="/images/osmekos-hero-landscape.jpg"
               alt="OsmeKos Premium Body Lotion in a botanical interior"
               fill
+              priority
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover object-[72%_center] transition-transform duration-700 group-hover:scale-[1.02]"
             />

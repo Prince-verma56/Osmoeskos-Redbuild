@@ -15,9 +15,28 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
     document.fonts?.ready.then(refresh).catch(() => {});
     window.addEventListener("load", refresh);
 
+    // Re-measure when dynamic images or content expand the page height.
+    let resizeTimer: NodeJS.Timeout | null = null;
+    const debouncedRefresh = () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 120);
+    };
+
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined" && document.body) {
+      observer = new ResizeObserver(debouncedRefresh);
+      observer.observe(document.body);
+    }
+
     if (reduce) {
       // No smooth scroll under reduced motion — native scrolling only.
-      return () => window.removeEventListener("load", refresh);
+      return () => {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        observer?.disconnect();
+        window.removeEventListener("load", refresh);
+      };
     }
 
     const lenis = new Lenis({
@@ -41,6 +60,8 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
     gsap.ticker.lagSmoothing(0);
 
     return () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      observer?.disconnect();
       lenis.off("scroll", ScrollTrigger.update);
       gsap.ticker.remove(onTick);
       gsap.ticker.lagSmoothing(500, 33);
