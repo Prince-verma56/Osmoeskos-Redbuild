@@ -7,6 +7,8 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowUpRight, ChevronDown, Menu, Search, X } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Logo } from "@/components/brand/logo";
+import { PhotoPlaceholder } from "@/components/visual/photo-placeholder";
 import { filterSearchResults } from "@/lib/search-data";
 import { getLenis } from "@/lib/animations/lenis-store";
 
@@ -16,7 +18,8 @@ type MenuItem = {
   title: string;
   description?: string;
   href: string;
-  image?: string;
+  /** `null` reserves the thumbnail for approved photography still pending. */
+  image?: string | null;
   imageAlt?: string;
 };
 
@@ -43,8 +46,7 @@ const megaMenus: Record<MenuKey, MegaMenu> = {
         title: "Our Philosophy",
         description: "The point of view that guides our daily rituals.",
         href: "/our-story#philosophy",
-        image: "/images/osmekos-about-lifestyle.jpg",
-        imageAlt: "A quiet body-care ritual in a botanical interior",
+        image: null,
       },
       {
         title: "Formulation Philosophy",
@@ -160,7 +162,7 @@ const megaMenus: Record<MenuKey, MegaMenu> = {
     items: [
       {
         title: "Body Lotion",
-        description: "The signature OsmeKos body lotion.",
+        description: "The signature OsmeKos Body Lotion.",
         href: "/product/body-lotion",
       },
       {
@@ -240,15 +242,24 @@ function MenuRow({
       onClick={onNavigate}
       className="group/row flex min-w-0 items-center gap-4 rounded-2xl px-2 py-2 transition-colors hover:bg-[#EAE4D9]/75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]"
     >
-      {item.image && (
+      {item.image !== undefined && (
         <div className="relative size-[4.25rem] shrink-0 overflow-hidden rounded-[0.9rem] bg-[#EAE4D9]">
-          <Image
-            src={item.image}
-            alt={item.imageAlt ?? ""}
-            fill
-            sizes="68px"
-            className="object-cover transition-transform duration-500 group-hover/row:scale-105"
-          />
+          {item.image ? (
+            <Image
+              src={item.image}
+              alt={item.imageAlt ?? ""}
+              fill
+              sizes="68px"
+              className="object-cover transition-transform duration-500 group-hover/row:scale-105"
+            />
+          ) : (
+            <PhotoPlaceholder
+              slot={item.title}
+              tone="sage"
+              caption={false}
+              className="transition-transform duration-500 group-hover/row:scale-105"
+            />
+          )}
         </div>
       )}
       <div className="min-w-0 flex-1">
@@ -274,6 +285,7 @@ export function Navigation() {
   const barRef = useRef<HTMLDivElement>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollFrameRef = useRef<number | null>(null);
+  const logoRef = useRef<HTMLAnchorElement>(null);
   const [activeMenu, setActiveMenu] = useState<MenuKey | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -339,8 +351,12 @@ export function Navigation() {
         current === nextHeroAtTop ? current : nextHeroAtTop,
       );
 
-      // Check if navbar viewport area (Y ≈ 55px) intersects any dark surface
+      // Check whether the surface directly beneath the logo (Y ≈ 55px) is dark.
+      // Probing under the logo, not anywhere across the width, keeps the logo
+      // legible while horizontally moving panels (the pinned story) pass by.
       const navY = 55;
+      const logoBox = logoRef.current?.getBoundingClientRect();
+      const probeX = logoBox ? logoBox.left + logoBox.width / 2 : 0;
       const darkElements = document.querySelectorAll(
         '[data-surface="dark"], [data-theme="dark"]'
       );
@@ -348,7 +364,7 @@ export function Navigation() {
       for (let i = 0; i < darkElements.length; i++) {
         const rect = darkElements[i].getBoundingClientRect();
         if (rect.top <= navY && rect.bottom >= navY) {
-          if (rect.left < window.innerWidth && rect.right > 0) {
+          if (rect.left <= probeX && rect.right >= probeX) {
             dark = true;
             break;
           }
@@ -370,6 +386,9 @@ export function Navigation() {
       passive: true,
     });
     window.addEventListener("resize", requestHeaderSurfaceUpdate);
+    // Scrubbed animations keep moving surfaces after scrolling stops; they
+    // announce it with this event (see components/sections/horizontal-story.tsx).
+    window.addEventListener("osmekos:surface-move", requestHeaderSurfaceUpdate);
 
     const lenis = getLenis();
     if (lenis) {
@@ -379,10 +398,14 @@ export function Navigation() {
     return () => {
       window.removeEventListener("scroll", requestHeaderSurfaceUpdate);
       window.removeEventListener("resize", requestHeaderSurfaceUpdate);
+      window.removeEventListener("osmekos:surface-move", requestHeaderSurfaceUpdate);
       const l = getLenis();
       if (l) l.off("scroll", requestHeaderSurfaceUpdate);
       if (scrollFrameRef.current !== null) {
         window.cancelAnimationFrame(scrollFrameRef.current);
+        // Reset, or the next mount sees a stale id and never schedules an
+        // update (dev Strict Mode re-mounts; interrupted route changes).
+        scrollFrameRef.current = null;
       }
     };
   }, [pathname]);
@@ -569,17 +592,18 @@ export function Navigation() {
         >
           <div className="flex min-w-0 items-center gap-7 xl:gap-10">
             <Link
+              ref={logoRef}
               href="/"
               onClick={closeMenu}
               className={classes(
-                "shrink-0 font-heading text-[1.35rem] font-semibold tracking-[0.01em] transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B7A06B]",
+                "shrink-0 transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B7A06B]",
                 isDarkSurface
                   ? "text-[#F7F5EF] drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)] hover:text-white"
                   : "text-[#243526] hover:opacity-75",
               )}
               aria-label="OsmeKos home"
             >
-              OsmeKos
+              <Logo decorative className="h-10 lg:h-11" />
             </Link>
 
             <nav aria-label="Primary navigation" className="hidden items-center gap-1 lg:flex">
@@ -739,7 +763,7 @@ export function Navigation() {
               >
                 <div className="flex h-full flex-col overscroll-contain overflow-y-auto px-6 pb-8 pt-8 touch-pan-y">
                   <SheetTitle
-                    className="w-fit pr-10 font-heading text-3xl text-[#243526] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B7A06B]"
+                    className="w-fit pr-10 text-[#243526] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B7A06B]"
                     render={
                       <Link
                         href="/"
@@ -748,7 +772,7 @@ export function Navigation() {
                       />
                     }
                   >
-                    OsmeKos
+                    <Logo decorative className="h-14" />
                   </SheetTitle>
                   <nav aria-label="Mobile navigation" className="mt-9 flex flex-col">
                     {desktopMenuKeys.map((menuKey) => {

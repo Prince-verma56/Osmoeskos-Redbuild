@@ -721,3 +721,211 @@ early-returns in every primitive, leaving content fully visible.
   reached, then animates in once (never "there, then re-animates"); above-the-fold hero/first
   section plays its entrance on load; reduced motion shows everything immediately.
 
+## Phase 26 Decisions — Official Logo, Brand Naming & Imagery Audit
+
+(The brief was titled "Phase 16 — Official Brand Asset Integration"; it is recorded as Phase 26
+because Phase 16 already exists above.)
+
+### Client-supplied source (authoritative for the logo only)
+- **Path:** `Osmekos  logo.cdr/` at the project root (note the double space): the extracted
+  CorelDRAW X7 archive (`.cdr` is a zip). Preserved unchanged and untracked in git.
+- **Contents:** one Letter page, one layer, **3 curve objects and 0 text objects**: (1) the "OK"
+  monogram and (2) the "OsmeKos" wordmark, grouped and filled white (CMYK 0/0/0/0); (3) a black
+  (RGB 0/0/0) background rectangle. Layout: a stacked lockup with the monogram above the wordmark.
+- **Every colour in the file:** only **white** (logo) and **black** (background) render. Two
+  more values are dormant: **#FFF8EE** (RGB 255/248/238, a warm cream) is the background
+  rectangle's *outline* colour, but the outline is `type 0` with `width 0`, so it never draws.
+  A 40% grey is a leftover character style on the monogram from before it was converted to
+  curves. `docPalette.xml` lists black only. CorelDRAW's default style sheet (`document.cdss`)
+  holds stock colours (e.g. CMYK 80/40/0/20) that are not brand choices.
+- **Font metadata:** the residual character styles in `content/data/page1.dat` map
+  **Baskerville Old Face → the "OK" monogram** and **Montserrat Medium → the "OsmeKos"
+  wordmark**. Both are now outlined curves. These are treated as clues to the logo's origin,
+  **not** as website typography. The site stays on Manrope (Phase 12).
+- **Not in the archive:** brand guidelines, a palette spec, clear-space/minimum-size rules,
+  alternate lockups, photography, or packaging files.
+
+### Conversion
+- Inkscape was not available. The curves were extracted programmatically from the CDR RIFF data
+  (`loda` coordinate records plus per-object `trfd` matrices, using libcdr semantics). Nothing was
+  redrawn or re-typeset. Verified: the computed background bounds match the file's own `ClipRect`
+  metadata to the unit, and the render matches Corel's embedded preview.
+- **Use the non-zero fill rule (the SVG default).** The wordmark's glyph outlines overlap (they
+  were never welded), so even-odd fill punches holes in `m`, `e` and `K`. Any re-export (for
+  example via Inkscape, which reads `.cdr`) must keep non-zero fill and a tight crop.
+
+### Exported assets
+| File | Content | Colour | Provenance |
+|---|---|---|---|
+| `public/brand/osmekos-logo-dark.svg` | Full stacked lockup, tight crop (362.31 × 200) | `#243526` | **Derived** colourway for light surfaces |
+| `public/brand/osmekos-logo-light.svg` | Same | `#FFFFFF` | Supplied colour, transparent background |
+| `public/brand/osmekos-mark.svg` | "OK" monogram only (173.49 × 123.69) | `#243526` | **Derived** colourway |
+| `app/icon.svg`, `app/favicon.ico` (16/32/48 PNG frames), `app/apple-icon.png` (180) | Monogram in `#F7F5EF` on a `#243526` tile | — | **Derived** favicon treatment |
+- Next's file conventions emit the icon / apple-touch-icon `<link>` tags. There is no
+  `metadata.icons`, so no declarations conflict. The stock create-next-app `favicon.ico` was
+  replaced.
+- Aspect ratios: the lockup is 1.8116:1 and the mark 1.4026:1. Never stretch either; set the
+  height and leave the width auto.
+- No Open Graph image was added, because the production domain (`metadataBase`) is unknown.
+
+### Reusable component — `components/brand/logo.tsx`
+- `<Logo variant="lockup" | "mark" tone="inherit" | "dark" | "light" decorative />` renders inline SVG
+  with the **same path data** as `public/brand/` (both came from one extraction, so regenerate
+  them together). It uses `fill="currentColor"`, so the header logo inherits the existing
+  ivory-over-hero and green-on-cream states with no image swap. `decorative` hides it from
+  assistive tech when the parent link already reads "OsmeKos home"; otherwise it renders
+  `role="img"` with `aria-label="OsmeKos"`. It has no hooks and is not a client component.
+- **Sizing is by CSS height class (`h-*`, width auto).** The SVG's intrinsic `width`/`height`
+  attributes are a deliberate header-sized fallback (40px tall), not the 362 × 200 viewBox.
+  This was added after a stale dev tab received the new JS without the new utility CSS and
+  rendered the header logo at its full intrinsic size. Do not set the attributes back to the
+  viewBox dimensions. `tone="dark"` uses `text-primary`, so it follows the central token.
+- **Where the logo is used:**
+  - Header: lockup at `h-10` / `lg:h-11`. Header height is unchanged (70 / 74px), so the
+    mega-menu anchor and `scroll-mt-*` offsets are unaffected.
+  - Mobile Sheet title: `h-14`.
+  - Footer: `h-16` / `lg:h-18`, inheriting ivory on green.
+  - Preloader: `h-28` / `sm:h-36`. The monogram settles in, then the wordmark rises, animated
+    through `data-logo-part` targets so the settled frame is exactly the supplied lockup. The
+    Leaf emblem was removed. The corner "OsmeKos" caption was also removed: its CSS `uppercase`
+    rendered "OSMEKOS" and duplicated the logo. Red is still confined to the progress bar.
+- The search overlay and Quick View carry no logo; they show the product name as text only.
+
+### Brand naming
+- Brand: **OsmeKos**. Product: **OsmeKos Body Lotion**. Brand casing was already consistent.
+  Product mentions written "OsmeKos body lotion" were normalised in the ingredients metadata,
+  the ScrollVideo copy, the nav item description and the shop metadata. No CSS `uppercase` is
+  applied to the brand name anywhere.
+
+### Imagery audit — four stills withdrawn (user decision: replace all four)
+| Asset (still on disk; do not reference) | Problem | Former placements |
+|---|---|---|
+| `osmekos-hero-landscape.jpg` | Serif "OsmeKos" that does not match the official wordmark; invented "Premium Body Lotion / Bergamot & Cedarwood / Made in Italy" | Product Showcase, `/shop` hero, ScrollVideo poster |
+| `osmekos-product-detail.jpg` | Unbranded "Hydrating Body Lotion — Shea Butter & Aloe" (Aloe is not an OsmeKos ingredient) | `/product/body-lotion` hero, Horizontal Story P1, Quick View |
+| `osmekos-about-lifestyle.jpg` | Third-party "AURORA BOTANICALS" bottle | Home About, `/our-story` hero, Our Story mega-menu row |
+| `about-skincare.jpg` | Third-party "SERALIS" bottles | Product Showcase tile, `/our-story#thoughtful-care`, Texture Studio |
+- All 12 placements now render `components/visual/photo-placeholder.tsx`: an `ivory` / `sand` /
+  `sage` / `green` gradient built from existing tokens, with a faint official monogram. It is
+  `aria-hidden`, and a **development-only** caption names the photograph the slot needs.
+- **Restoring a slot:**
+  - Most slots: swap `<PhotoPlaceholder>` back to `<Image fill>` with the approved still.
+  - Texture Studio: set `media.textureMacro.src` in `lib/media.ts` (`null` means placeholder).
+  - ScrollVideo: pass a `poster` prop.
+  - Mega-menu: set the item's `image` (`null` means placeholder thumbnail).
+- ScrollVideo with no `poster`: the placeholder is layered *beneath* the `<video>` (now
+  `relative`). A missing `<source>` errors on the `<source>` element, not the `<video>`, so
+  `status` never reaches `"error"`. Without a poster, the stage would otherwise be an empty dark
+  box. An undecoded video is transparent, so the placeholder shows until real footage loads.
+- Horizontal Story P1's ken-burns effect now targets `.p1-media > *`, so it works on the
+  placeholder and on a restored `<img>`. The old `.p1-media img` target produced GSAP
+  "target not found" warnings once the image was gone.
+- Kept:
+  - `Hero.png`: the only in-use still whose bottle carries the official sans "OsmeKos™"
+    wordmark.
+  - The four ingredient images, `osmekos-formula-bg.jpg` and `Luminous Lotion on Dewy Skin.png`,
+    which show no packaging.
+- Unused create-next-app SVGs (`public/next.svg`, `vercel.svg`, `file.svg`, `globe.svg`,
+  `window.svg`) are candidates for a later cleanup.
+
+### Palette — unchanged (client palette to follow)
+- The client file contains no brand palette (see "Every colour in the file" above), so no tokens
+  were changed. The black background in the source is the supplied presentation, not a site
+  palette. The site stays cream-led (Phase 05), and the placeholders and favicon use existing
+  tokens only. The user will supply the official palette later.
+- **Before applying that palette:** the `:root` tokens in `app/globals.css` are *not* the only
+  source of colour. About 250 hardcoded hex literals across ~14 files bypass them (`#243526`
+  ×85, `#F7F5EF` ×58, `#B7A06B` ×35, `#77766C` ×22, `#EAE4D9` ×21, `#DCE3D4` ×13, `#25291F` ×9,
+  `#1b2a1f` ×8). Changing the tokens alone will not recolour the site. Map these literals to
+  tokens or utilities first, then swap the values in one place. Keep the preloader's red
+  `#C0392B` as-is (Phase 05 permanent rule).
+
+### Known pre-existing issue (not changed)
+- Under `prefers-reduced-motion`, the homepage Ingredients atlas (`components/sections/ingredients.tsx`,
+  Phase 20) logs one React hydration-mismatch warning per load. Its Motion `motion.div`s render
+  `style={}` on the client against `opacity:1` / `transform:none` from the server. It does not
+  occur with normal motion, and it is unrelated to the logo work.
+
+### Open questions for the client
+1. **Logo colourways:** only white-on-black was supplied. Are the green (`#243526`) logo on light
+   surfaces and the ivory-on-green favicon approved?
+2. **Brand guidelines:** clear space, minimum size, any horizontal or wordmark-only lockup.
+3. **Logo fonts:** are Montserrat / Baskerville Old Face (named in the file metadata) intended
+   for any brand typography? The site stays on Manrope until this is confirmed.
+4. **Photography:** approved stills are needed for the 12 placeholder slots. Is `Hero.png`
+   authentic OsmeKos packaging?
+5. **Formula discrepancy (not changed):** the `Hero.png` label reads "Shea Butter 2%,
+   Niacinamide 2%, Panthenol (B5) 2%, Vitamin E 0.5%, HA + B5 + EGT". `lib/osmekos-data.ts` and
+   `/shop` list Shea Butter 3%, Coconut Oil 2%, Niacinamide 2%, Vitamin E 0.5%. Needs client
+   confirmation.
+6. **Production domain:** needed for `metadataBase` and an Open Graph image.
+
+### Verified (Phase 26)
+- `tsc --noEmit` is clean. `eslint` reports 0 errors (1 pre-existing `headerIsTransparent`
+  warning). `next build` prerenders all 9 routes plus `/icon.svg` and `/apple-icon.png`.
+- **Browser-verified** in headless Chrome against the production build at
+  1440/1024/768/390/375/320px:
+  - The logo keeps a 1.811 aspect ratio at every size, and the header height is unchanged.
+  - No horizontal overflow and no broken images.
+  - `<head>` emits `favicon.ico`, `icon.svg` and an apple-touch-icon, all served with status 200.
+  - No text-based logo remains in the header or footer.
+  - The mobile Sheet's dialog name is "OsmeKos home".
+  - The preloader plays in a fresh session and unmounts.
+  - The console shows nothing except the pre-existing missing-MP4 404 (Phase 18).
+- **Not verified:** the favicon as drawn in a real tab strip (headless Chrome has none; the
+  served files and `<link>` tags were checked instead), and Safari / Firefox.
+- **Follow-up (fallback size):** re-verified on the dev server at 1891/1440/1024/768/390/320px,
+  in hero and scrolled states. The logo is 80 × 44 on desktop and 72 × 40 below `lg`, and the
+  header height is unchanged. With every stylesheet removed, the logo falls back to 72 × 40
+  instead of 362 × 200. `tsc` is clean and `eslint` reports 0 errors.
+
+### Follow-up — Horizontal Story ceramide panel & header contrast
+- **Aligned ceramide rows** (`horizontal-story.tsx`, panel 02): the rows were flex with
+  `items-baseline`, so each description started where its code ended (EOP is wider) and hung
+  below the code. They now share one grid via `grid-cols-subgrid`. The code column is sized by
+  the widest code, every description starts on the same line, and rows use `items-center`. The
+  copy now comes from `ceramides` in `lib/osmekos-data.ts`: three distinct, already-approved
+  descriptions instead of one sentence repeated three times.
+- **Scene reveals finish at rest:** scene *N* is fully in view at timeline t = N. Scene 2's last
+  row previously faded in over 0.92–1.32 and scene 3's last card over 1.96–2.38, so both were
+  left half-faded when the scene was centred. Retimed so scene 2 completes by 0.94, scene 3 by
+  1.98 and scene 4 by 3.0. **No tween may extend past t = 3:** scene 4's old 2.4–3.3 tween
+  stretched the timeline, which made the chapter tabs and active-chapter indicator land about
+  10% off-centre.
+- **Header contrast over dark surfaces** (`navigation.tsx`):
+  1. Root cause: the surface effect's cleanup cancelled its pending rAF but never reset
+     `scrollFrameRef`. After a dev Strict-Mode re-mount (or an interrupted route change), the
+     stale id blocked every later update, so the header never switched to ivory. It now resets
+     to `null`.
+  2. Detection now probes the surface *under the logo* rather than any dark sliver across the
+     viewport.
+  3. The story timeline dispatches `osmekos:surface-move` on update, because the scrub keeps
+     panels moving after scrolling stops. The header listens for it and re-checks.
+  - Verified: ivory over story scenes 2 and 4 and over `#formula`; green over the hero, scenes
+    1 and 3, and `#ingredients`.
+- Verified in headless Chrome on the dev server at 1598 px and 390 px. Each chapter tab lands
+  its panel at `left: 0`. All ceramide descriptions share x = 901 with 0 px vertical-centre
+  offset at opacity 1, all scene-3 cards and scene-4 content are at opacity 1, and there is no
+  mobile overflow. `tsc` is clean, `eslint` reports 0 errors, and `next build` prerenders every
+  route.
+
+
+<!-- BEGIN:nextjs-agent-feedback -->
+
+## Report Next.js feedback
+
+The project owner enabled `experimental.agentFeedback`, authorizing this feedback pass. When enabled, `next dev` writes this block and restores it if removed. Commit `AGENTS.md` with your work to keep the tree clean.
+
+During the current user request, retain anonymized facts as feedback candidates for meaningful or recurring Next.js issues:
+
+- Crashes, hangs, OOMs, or unexpected slowness
+- Incorrect behavior, output, errors, or diagnostics
+- Missing, unclear, or conflicting documentation
+- Unexpected CLI, codemod, Skill, or upgrade behavior and non-obvious workarounds
+
+Continue the current user request without reporting immediately. Ignore routine debugging and unverified changes. Never retain code, logs, paths, URLs, secrets, personal information, or project-specific data.
+
+Keep a qualifying candidate through the reporting pass even if you resolve or work around it. A successful fix changes the report outcome; it does not erase the friction that qualified it.
+
+Before the final response, run one reporting pass. If candidates remain, from this file's directory run `node node_modules/next/dist/bin/next internal agent-feedback-instructions` once without piping or truncating its output. Follow its output or error guidance. If a network sandbox blocks it, retry with network access; if it still returns no output, continue normally.
+
+<!-- END:nextjs-agent-feedback -->

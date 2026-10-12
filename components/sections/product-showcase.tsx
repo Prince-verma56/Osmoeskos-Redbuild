@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Reveal } from "@/components/animations/reveal";
 import { RevealHeading } from "@/components/animations/reveal-heading";
 import { ProductQuickView } from "@/components/product/product-quick-view";
+import { PhotoPlaceholder } from "@/components/visual/photo-placeholder";
 
 export function ProductShowcase() {
   return (
@@ -51,14 +52,8 @@ export function ProductShowcase() {
             media
             className="w-full relative aspect-[4/3] sm:aspect-[16/9] bg-[#EAE4D9] rounded-[2rem] lg:rounded-[3rem] overflow-hidden flex items-center justify-center border border-[#DCE3D4]/50 shadow-sm"
           >
-            {/* Full-bleed landscape product scene. */}
-            <Image
-              src="/images/osmekos-hero-landscape.jpg"
-              alt="OsmeKos body lotion in a botanical interior"
-              fill
-              sizes="(max-width: 1024px) 100vw, 67vw"
-              className="object-cover object-center"
-            />
+            {/* Full-bleed landscape product scene — approved photography pending. */}
+            <PhotoPlaceholder slot="Product in setting (landscape)" tone="ivory" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#243526]/20 via-transparent to-[#243526]/10" aria-hidden="true" />
             
             {/* Decorative Labels like Seed */}
@@ -87,12 +82,10 @@ export function ProductShowcase() {
               delay={0.1}
               className="relative aspect-square rounded-[1.5rem] overflow-hidden bg-muted border border-border/50 shadow-sm group"
             >
-              <Image 
-                src="/images/about-skincare.jpg" 
-                alt="Skincare Texture" 
-                fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
-                sizes="(max-width: 640px) 100vw, 33vw"
+              <PhotoPlaceholder
+                slot="Application close-up"
+                tone="sage"
+                className="transition-transform duration-700 group-hover:scale-105"
               />
             </Reveal>
             

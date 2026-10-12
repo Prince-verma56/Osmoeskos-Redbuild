@@ -7,6 +7,7 @@ import { useReducedMotion } from "motion/react";
 import { Reveal } from "@/components/animations/reveal";
 import { RevealHeading } from "@/components/animations/reveal-heading";
 import { media } from "@/lib/media";
+import { PhotoPlaceholder } from "@/components/visual/photo-placeholder";
 
 /**
  * Texture Studio — an image-led sensory moment for the lotion texture.
@@ -77,14 +78,18 @@ export function TextureStudio() {
             onPointerLeave={() => setHovering(false)}
           >
             {/* Base (crisp) image */}
-            <Image
-              src={asset.src}
-              alt={asset.alt}
-              fill
-              sizes="(max-width: 1024px) 100vw, 60vw"
-              className="object-cover"
-              style={{ objectPosition: asset.focal }}
-            />
+            {asset.src ? (
+              <Image
+                src={asset.src}
+                alt={asset.alt}
+                fill
+                sizes="(max-width: 1024px) 100vw, 60vw"
+                className="object-cover"
+                style={{ objectPosition: asset.focal }}
+              />
+            ) : (
+              <PhotoPlaceholder slot="Texture macro close-up" tone="ivory" />
+            )}
 
             {/* Soft wash — only while the lens is active */}
             <div
@@ -104,14 +109,18 @@ export function TextureStudio() {
                 maskImage: lensMask,
               }}
             >
-              <Image
-                src={asset.src}
-                alt=""
-                fill
-                sizes="(max-width: 1024px) 100vw, 60vw"
-                className="object-cover"
-                style={{ objectPosition: asset.focal }}
-              />
+              {asset.src ? (
+                <Image
+                  src={asset.src}
+                  alt=""
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 60vw"
+                  className="object-cover"
+                  style={{ objectPosition: asset.focal }}
+                />
+              ) : (
+                <PhotoPlaceholder slot="Texture macro close-up" tone="ivory" caption={false} />
+              )}
             </div>
           </div>
 

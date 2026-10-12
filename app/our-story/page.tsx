@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Metadata } from "next";
 import { Reveal } from "@/components/animations/reveal";
 import { RevealHeading } from "@/components/animations/reveal-heading";
+import { PhotoPlaceholder } from "@/components/visual/photo-placeholder";
 
 export const metadata: Metadata = {
   title: "Our Story | OsmeKos",
@@ -38,14 +39,7 @@ export default function OurStoryPage() {
         </div>
 
         <Reveal media className="relative w-full aspect-[16/10] overflow-hidden rounded-[2rem] shadow-lg lg:rounded-[3rem]">
-          <Image
-            src="/images/osmekos-about-lifestyle.jpg"
-            alt="A quiet body-care ritual in a botanical interior"
-            fill
-            priority
-            sizes="(max-width: 1024px) 100vw, 80vw"
-            className="object-cover object-[center_top]"
-          />
+          <PhotoPlaceholder slot="Our Story lifestyle hero" tone="sage" />
           <div className="absolute inset-0 z-10 bg-gradient-to-t from-foreground/15 to-transparent" />
         </Reveal>
       </section>
@@ -96,13 +90,7 @@ export default function OurStoryPage() {
       <section id="thoughtful-care" className="w-full bg-background py-20 lg:py-28 scroll-mt-20 lg:scroll-mt-24">
         <div className="w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-24 grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center">
           <Reveal media className="relative w-full aspect-[4/3] rounded-[2rem] lg:rounded-[3rem] overflow-hidden shadow-md">
-            <Image
-              src="/images/about-skincare.jpg"
-              alt="Gentle application of skincare on healthy skin"
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
-            />
+            <PhotoPlaceholder slot="Body-care ritual close-up" tone="sand" />
           </Reveal>
           <div className="flex flex-col gap-7">
             <Reveal>

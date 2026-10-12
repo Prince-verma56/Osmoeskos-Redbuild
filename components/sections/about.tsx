@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { Reveal } from "@/components/animations/reveal";
+import { PhotoPlaceholder } from "@/components/visual/photo-placeholder";
 import { RevealHeading } from "@/components/animations/reveal-heading";
 
 export function About() {
@@ -12,13 +12,7 @@ export function About() {
           media
           className="order-2 lg:order-1 relative w-full aspect-[4/3] rounded-[2rem] lg:rounded-tr-[6rem] lg:rounded-bl-[6rem] overflow-hidden bg-background shadow-xl"
         >
-          <Image
-            src="/images/osmekos-about-lifestyle.jpg"
-            alt="A quiet body-care ritual in a light-filled space"
-            fill
-            className="object-cover object-[center_top]"
-            sizes="(max-width: 1024px) 100vw, 50vw"
-          />
+          <PhotoPlaceholder slot="Lifestyle ritual" tone="ivory" />
         </Reveal>
 
         {/* Right Content */}

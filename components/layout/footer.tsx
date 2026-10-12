@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { Logo } from "@/components/brand/logo";
 
 const exploreLinks = [
   { href: "/product/body-lotion", label: "Body Lotion" },
@@ -47,8 +48,12 @@ export function Footer() {
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-14">
           <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
             <div className="flex flex-col gap-5 lg:col-span-5">
-              <Link href="/" className="w-fit font-heading text-3xl font-medium tracking-wide">
-                OsmeKos
+              <Link
+                href="/"
+                aria-label="OsmeKos home"
+                className="w-fit focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-foreground"
+              >
+                <Logo decorative className="h-16 lg:h-18" />
               </Link>
               <p className="max-w-sm text-base leading-relaxed text-primary-foreground/70">
                 Skincare that feels like care. Formulated with a Triple Ceramide Complex and thoughtful botanicals for a considered daily ritual.

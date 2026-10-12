@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger } from "@/lib/animations/gsap";
 import { CinematicOverlay } from "@/components/visual/cinematic-overlay";
+import { PhotoPlaceholder } from "@/components/visual/photo-placeholder";
 
 /**
  * Signature Experience B — Scroll-controlled video scrubbing.
@@ -51,12 +52,13 @@ type ScrollVideoProps = {
 export function ScrollVideo({
   eyebrow = "The Film",
   title = "A quiet ritual, in motion.",
-  description = "Warm light, the turn of the bottle, the first press of cream — the OsmeKos body lotion, from first look to finish.",
+  description = "Warm light, the turn of the bottle, the first press of cream — the OsmeKos Body Lotion, from first look to finish.",
   ctaHref = "/product/body-lotion",
   ctaLabel = "Discover the product",
   src = "/videos/osmekos-body-lotion-story.mp4",
-  poster = "/images/osmekos-hero-landscape.jpg",
-  posterAlt = "OsmeKos Body Lotion in a light-filled botanical setting",
+  // No approved poster still yet — the stage falls back to a placeholder.
+  poster,
+  posterAlt = "",
   scrubViewportHeights = 2.2,
 }: ScrollVideoProps) {
   const sectionRef = useRef<HTMLElement>(null);
@@ -162,10 +164,14 @@ export function ScrollVideo({
       <div className="mx-auto grid w-full max-w-[90rem] grid-cols-1 items-center gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-16">
         {/* Video stage */}
         <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2rem] bg-[#1b2a1f] shadow-[0_2rem_5rem_-1.5rem_rgba(27,42,31,0.55)] sm:aspect-[16/10] lg:aspect-[4/3] lg:rounded-[2.5rem]">
+          {/* Without a poster, the placeholder sits beneath the (transparent
+              until it has a frame) video, so the stage is never an empty box. */}
+          {!poster ? <PhotoPlaceholder slot="Film poster still" tone="green" /> : null}
+
           {showVideo ? (
             <video
               ref={videoRef}
-              className="h-full w-full object-cover"
+              className="relative h-full w-full object-cover"
               poster={poster}
               muted
               playsInline
@@ -176,7 +182,7 @@ export function ScrollVideo({
             >
               <source src={src} type="video/mp4" />
             </video>
-          ) : (
+          ) : poster ? (
             <Image
               src={poster}
               alt={posterAlt}
@@ -184,7 +190,7 @@ export function ScrollVideo({
               sizes="(max-width: 1024px) 100vw, 55vw"
               className="object-cover object-center"
             />
-          )}
+          ) : null}
 
           {/* Cinematic film grain + vignette for graded-footage depth. */}
           <CinematicOverlay
@@ -206,8 +212,8 @@ export function ScrollVideo({
               </span>{" "}
               Add a web-optimised H.264 MP4 at{" "}
               <code className="text-[#E9DFBF]">{src}</code> (frequent keyframes
-              for smooth seeking) to activate scroll-scrub playback. Poster shown
-              as fallback.
+              for smooth seeking) to activate scroll-scrub playback. Poster (or
+              placeholder) shown as fallback.
             </div>
           ) : null}
         </div>

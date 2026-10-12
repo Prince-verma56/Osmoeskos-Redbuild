@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import { PhotoPlaceholder } from "@/components/visual/photo-placeholder";
 import {
   Dialog,
   DialogTrigger,
@@ -47,13 +47,7 @@ export function ProductQuickView({
         <div className="grid max-h-[85vh] grid-cols-1 overflow-y-auto overscroll-contain sm:grid-cols-[0.9fr_1.1fr]">
           {/* Product image */}
           <div className="relative aspect-[4/5] w-full bg-[#EAE4D9] sm:aspect-auto sm:min-h-[26rem]">
-            <Image
-              src="/images/osmekos-product-detail.jpg"
-              alt="The OsmeKos Body Lotion bottle"
-              fill
-              sizes="(max-width: 640px) 100vw, 40vw"
-              className="object-cover object-center"
-            />
+            <PhotoPlaceholder slot="Product packshot (portrait)" tone="sand" />
           </div>
 
           {/* Details */}

@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Metadata } from "next";
+import { PhotoPlaceholder } from "@/components/visual/photo-placeholder";
 
 export const metadata: Metadata = {
   title: "Shop | OsmeKos",
-  description: "Shop OsmeKos premium skincare body lotion.",
+  description: "Shop the OsmeKos Body Lotion, premium skincare for everyday body care.",
 };
 
 export default function ShopPage() {
@@ -27,13 +27,10 @@ export default function ShopPage() {
           
           {/* Media Side */}
           <div className="relative aspect-[4/3] overflow-hidden md:aspect-auto md:min-h-[32rem]">
-            <Image
-              src="/images/osmekos-hero-landscape.jpg"
-              alt="OsmeKos Premium Body Lotion in a botanical interior"
-              fill
-              priority
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover object-[72%_center] transition-transform duration-700 group-hover:scale-[1.02]"
+            <PhotoPlaceholder
+              slot="Product in setting (landscape)"
+              tone="sage"
+              className="transition-transform duration-700 group-hover:scale-[1.02]"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#243526]/30 via-transparent to-transparent" aria-hidden="true" />
           </div>

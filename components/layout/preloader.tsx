@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Leaf } from "lucide-react";
 import gsap from "gsap";
+import { Logo } from "@/components/brand/logo";
 
 export function Preloader({ onComplete }: { onComplete: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const centerRef = useRef<HTMLDivElement>(null);
-  const emblemRef = useRef<HTMLSpanElement>(null);
-  const wordRef = useRef<HTMLSpanElement>(null);
+  const logoRef = useRef<HTMLSpanElement>(null);
   const taglineRef = useRef<HTMLSpanElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
@@ -27,20 +26,24 @@ export function Preloader({ onComplete }: { onComplete: () => void }) {
     const context = gsap.context(() => {
       const counter = { value: 0 };
       const timeline = gsap.timeline({ onComplete });
+      // The two parts of the official lockup animate in place, so the
+      // settled composition is exactly the supplied logo.
+      const mark = logoRef.current?.querySelector('[data-logo-part="mark"]');
+      const wordmark = logoRef.current?.querySelector('[data-logo-part="wordmark"]');
 
       timeline
-        // Emblem settles in first.
+        // Monogram settles in first.
         .fromTo(
-          emblemRef.current,
-          { autoAlpha: 0, scale: 0.86, y: 6 },
+          mark ?? [],
+          { autoAlpha: 0, scale: 0.86, y: 6, transformOrigin: "50% 50%" },
           { autoAlpha: 1, scale: 1, y: 0, duration: 0.6, ease: "power3.out" },
           0,
         )
-        // Wordmark rises out of its mask — an editorial reveal.
+        // Wordmark rises into place beneath it.
         .fromTo(
-          wordRef.current,
-          { yPercent: 115 },
-          { yPercent: 0, duration: 0.75, ease: "power4.out" },
+          wordmark ?? [],
+          { autoAlpha: 0, y: 24 },
+          { autoAlpha: 1, y: 0, duration: 0.75, ease: "power4.out" },
           0.12,
         )
         .fromTo(
@@ -110,36 +113,21 @@ export function Preloader({ onComplete }: { onComplete: () => void }) {
       {/* Editorial corner framing */}
       <div
         ref={frameRef}
-        className="pointer-events-none absolute inset-x-6 top-8 flex items-center justify-between text-[0.625rem] font-semibold uppercase tracking-[0.28em] text-[#77766C] sm:inset-x-10"
+        className="pointer-events-none absolute inset-x-6 top-8 flex items-center justify-end text-[0.625rem] font-semibold uppercase tracking-[0.28em] text-[#77766C] sm:inset-x-10"
         aria-hidden="true"
       >
-        <span>OsmeKos</span>
         <span className="text-[#B7A06B]">Body Care</span>
       </div>
 
       {/* Center composition */}
       <div ref={centerRef} className="flex flex-col items-center px-6 text-center" aria-hidden="true">
-        <span
-          ref={emblemRef}
-          className="mb-8 grid size-[4.5rem] place-items-center rounded-full border border-[#243526]/15 bg-white/60 shadow-[0_0.75rem_2.5rem_rgba(36,53,38,0.08)]"
-        >
-          <span className="grid size-12 place-items-center rounded-full border border-[#B7A06B]/50">
-            <Leaf className="size-5 text-[#243526]" strokeWidth={1.4} />
-          </span>
-        </span>
-
-        <span className="block overflow-hidden pb-[0.12em]">
-          <span
-            ref={wordRef}
-            className="block font-heading text-6xl font-medium leading-[0.95] tracking-[0.02em] sm:text-7xl"
-          >
-            OsmeKos
-          </span>
+        <span ref={logoRef} className="block">
+          <Logo decorative className="h-28 sm:h-36" />
         </span>
 
         <span
           ref={taglineRef}
-          className="mt-4 block text-[0.625rem] font-medium uppercase tracking-[0.3em] text-[#77766C]"
+          className="mt-6 block text-[0.625rem] font-medium uppercase tracking-[0.3em] text-[#77766C]"
         >
           Thoughtful body care
         </span>

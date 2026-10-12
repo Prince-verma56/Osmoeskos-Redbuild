@@ -5,6 +5,7 @@ import { ingredients } from "@/lib/osmekos-data";
 import { CeramideCards } from "@/components/sections/ceramide-cards";
 import { Reveal } from "@/components/animations/reveal";
 import { RevealHeading } from "@/components/animations/reveal-heading";
+import { PhotoPlaceholder } from "@/components/visual/photo-placeholder";
 
 export const metadata: Metadata = {
   title: "Body Lotion | OsmeKos",
@@ -22,14 +23,7 @@ export default function ProductPage() {
       >
         {/* Media — portrait bottle still life in a matching portrait frame */}
         <Reveal media className="relative w-full aspect-[4/5] overflow-hidden rounded-[2rem] border border-[#DCE3D4] bg-[#EAE4D9] lg:rounded-[3rem]">
-          <Image
-            src="/images/osmekos-product-detail.jpg"
-            alt="OsmeKos Body Lotion on a stone plinth in soft daylight"
-            fill
-            priority
-            sizes="(max-width: 1024px) 100vw, 43vw"
-            className="object-cover object-center"
-          />
+          <PhotoPlaceholder slot="Product packshot (portrait)" tone="sand" />
           <span className="absolute left-5 top-5 z-10 rounded-full border border-[#F7F5EF]/60 bg-[#F7F5EF]/75 px-3 py-1 text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-primary backdrop-blur-sm md:left-7 md:top-7">
             Daily care
           </span>

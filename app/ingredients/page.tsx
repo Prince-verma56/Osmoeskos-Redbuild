@@ -9,7 +9,7 @@ import { RevealHeading } from "@/components/animations/reveal-heading";
 export const metadata: Metadata = {
   title: "Ingredients | OsmeKos",
   description:
-    "Explore the natural and clinical ingredients in OsmeKos body lotion — Shea Butter, Coconut Oil, Niacinamide, Vitamin E, and the Triple Ceramide Complex.",
+    "Explore the natural and clinical ingredients in OsmeKos Body Lotion — Shea Butter, Coconut Oil, Niacinamide, Vitamin E, and the Triple Ceramide Complex.",
 };
 
 export default function IngredientsPage() {

@@ -7,8 +7,9 @@ import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger } from "@/lib/animations/gsap";
 import { prefersReducedMotion } from "@/lib/animations/reveal";
 import { getLenis } from "@/lib/animations/lenis-store";
-import { ingredients } from "@/lib/osmekos-data";
+import { ceramides, ingredients } from "@/lib/osmekos-data";
 import { CinematicOverlay } from "@/components/visual/cinematic-overlay";
+import { PhotoPlaceholder } from "@/components/visual/photo-placeholder";
 
 /**
  * Signature Experience A — Cinematic Horizontal Product Storytelling.
@@ -28,7 +29,6 @@ import { CinematicOverlay } from "@/components/visual/cinematic-overlay";
  * indicator are desktop-only so mobile stays clean.
  */
 
-const ceramideCodes = ["NP", "AP", "EOP"] as const;
 const chapterLabels = [
   "Daily Ritual",
   "The Complex",
@@ -97,6 +97,9 @@ export function HorizontalStory() {
         };
 
         const tl = gsap.timeline({
+          // The scrub keeps the dark panels gliding after scrolling stops; let
+          // the header re-check the surface under its logo as they move.
+          onUpdate: () => window.dispatchEvent(new Event("osmekos:surface-move")),
           scrollTrigger: {
             trigger: section,
             start: "top top",
@@ -130,10 +133,16 @@ export function HorizontalStory() {
 
         // 2. Per-scene reveals + media ken-burns (skipped under reduced motion).
         //    Content settles in once and stays fully visible — no exit dimming.
+        //    Scene N is centred at t = N (track: 0→3 over the timeline), so each
+        //    scene's reveals must finish by then — otherwise a row is left
+        //    half-faded at rest. Nothing may run past t = 3: a longer timeline
+        //    breaks the index → progress mapping used by goToScene and the
+        //    active-chapter indicator.
         if (!reduce) {
-          // Scene 1: product still settles from a slight over-scale.
+          // Scene 1: product still (or its placeholder) settles from a slight
+          // over-scale.
           tl.fromTo(
-            ".p1-media img",
+            ".p1-media > *",
             { scale: 1.12 },
             { scale: 1, duration: 1.2, ease: "power2.out" },
             0,
@@ -144,13 +153,13 @@ export function HorizontalStory() {
             ".p2-header",
             { autoAlpha: 0, y: 40 },
             { autoAlpha: 1, y: 0, duration: 0.45, ease: "power2.out" },
-            0.55,
+            0.38,
           );
           tl.fromTo(
             ".p2-ceramide-row",
             { autoAlpha: 0, y: 36 },
-            { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.12, ease: "power2.out" },
-            0.68,
+            { autoAlpha: 1, y: 0, duration: 0.3, stagger: 0.08, ease: "power2.out" },
+            0.48,
           );
 
           // Scene 3: header rises, then the four botanical cards lift + settle.
@@ -158,33 +167,33 @@ export function HorizontalStory() {
             ".p3-header",
             { autoAlpha: 0, y: 40 },
             { autoAlpha: 1, y: 0, duration: 0.45, ease: "power2.out" },
-            1.55,
+            1.38,
           );
           tl.fromTo(
             ".p3-ingredient-card",
             { autoAlpha: 0, y: 48, scale: 0.94 },
-            { autoAlpha: 1, y: 0, scale: 1, duration: 0.42, stagger: 0.1, ease: "power2.out" },
-            1.66,
+            { autoAlpha: 1, y: 0, scale: 1, duration: 0.32, stagger: 0.07, ease: "power2.out" },
+            1.45,
           );
           tl.fromTo(
             ".p3-ingredient-card img",
             { scale: 1.14 },
-            { scale: 1, duration: 0.9, stagger: 0.06, ease: "power2.out" },
-            1.66,
+            { scale: 1, duration: 0.5, stagger: 0.06, ease: "power2.out" },
+            1.45,
           );
 
           // Scene 4: cream texture settles from scale, content blooms in.
           tl.fromTo(
             ".p4-bg",
             { scale: 1.16 },
-            { scale: 1.0, duration: 0.9, ease: "power2.out" },
+            { scale: 1.0, duration: 0.6, ease: "power2.out" },
             2.4,
           );
           tl.fromTo(
             ".p4-content",
             { autoAlpha: 0, y: 44 },
-            { autoAlpha: 1, y: 0, duration: 0.5, ease: "power2.out" },
-            2.55,
+            { autoAlpha: 1, y: 0, duration: 0.45, ease: "power2.out" },
+            2.45,
           );
         }
 
@@ -194,7 +203,7 @@ export function HorizontalStory() {
           gsap.set(
             [
               track,
-              ".p1-media img",
+              ".p1-media > *",
               ".p2-header",
               ".p2-ceramide-row",
               ".p3-header",
@@ -253,13 +262,7 @@ export function HorizontalStory() {
             </Link>
           </div>
           <div className="p1-media relative z-10 aspect-[4/5] w-full max-w-sm overflow-hidden rounded-[2rem] bg-background shadow-xl lg:order-2 lg:max-w-md xl:max-w-lg">
-            <Image
-              src="/images/osmekos-product-detail.jpg"
-              alt="OsmeKos Body Lotion on a stone plinth"
-              fill
-              sizes="(max-width: 1024px) 90vw, 40vw"
-              className="object-cover object-center"
-            />
+            <PhotoPlaceholder slot="Product packshot (portrait)" tone="sage" />
           </div>
         </article>
 
@@ -281,22 +284,23 @@ export function HorizontalStory() {
               skin&apos;s natural moisture barrier, day after day.
             </p>
           </div>
-          <div className="relative z-10 flex max-w-2xl flex-1 flex-col gap-0">
-            {ceramideCodes.map((code, i) => (
+          {/* Rows share one grid (subgrid), so the code column is sized by the
+              widest code (EOP) and every description starts on the same line. */}
+          <div className="relative z-10 grid max-w-2xl flex-1 grid-cols-[auto_1fr] gap-x-6 sm:grid-cols-[auto_1fr_auto] sm:gap-x-10">
+            {ceramides.map((ceramide, i) => (
               <div
-                key={code}
-                className="p2-ceramide-row flex items-baseline gap-6 border-t border-[#F7F5EF]/15 py-6 first:border-t-0 sm:gap-10"
+                key={ceramide.code}
+                className="p2-ceramide-row col-span-full grid grid-cols-subgrid items-center border-t border-[#F7F5EF]/15 py-6 first:border-t-0"
               >
                 <span className="font-heading text-[2.75rem] leading-none text-[#B7A06B] sm:text-6xl lg:text-7xl">
-                  {code}
+                  {ceramide.code}
                 </span>
-                <span className="text-sm text-[#F7F5EF]/75 sm:text-base">
-                  Ceramide {code} — part of the lipid matrix that helps keep the
-                  skin&apos;s protective layer supple and intact.
+                <span className="text-sm leading-relaxed text-[#F7F5EF]/75 sm:text-base">
+                  {ceramide.description}
                 </span>
                 <span
                   aria-hidden="true"
-                  className="ml-auto hidden font-heading text-sm text-[#F7F5EF]/30 sm:block"
+                  className="hidden font-heading text-sm text-[#F7F5EF]/30 sm:block"
                 >
                   0{i + 1}
                 </span>
