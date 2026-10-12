@@ -512,3 +512,212 @@ TextureStudio → Ingredients(Atlas)`. Formula uses `Luminous…png`; TextureStu
   mobile/reduced-motion; chapter active state + click-to-scroll; no horizontal overflow at
   1440/1024/768/390/375/320; reduced motion leaves all content visible.
 
+## Phase 21 Decisions — Cinematic Horizontal Story & Filmic Site Treatment
+
+User ask: make the horizontal scroll section "10x more premium/cinematic" and give the
+site a cohesive cinematic feel. Enhancement only — the proven Phase-19
+pinning/distance math, single-Lenis rule, GSAP/Motion separation, and reduced-motion
+fallbacks were all preserved (not rebuilt).
+
+### Reusable filmic layer — `components/visual/cinematic-overlay.tsx`
+- `<CinematicOverlay grain vignette grainOpacity vignetteStrength />`: purely decorative
+  (pointer-events-none, aria-hidden), **static** inline-SVG `feTurbulence` grain (soft-light
+  blend) + a radial edge vignette. Static ⇒ inherently reduced-motion safe. Used by the
+  horizontal story and the scroll-video stage so immersive sections read as graded footage.
+
+### Horizontal story upgrade — `components/sections/horizontal-story.tsx`
+- Added, all inside the existing desktop `matchMedia("(min-width:1024px)")` scrubbed
+  timeline (skipped under reduced motion, which leaves the vertical stack fully visible):
+  - **Depth parallax:** oversized editorial chapter numerals (`01`–`04`) drift via
+    `xPercent` across the ribbon.
+  - **Breathing vignette** (`.hs-vignette`) dips darker through each scene transition.
+  - **Per-scene media ken-burns:** P1 media, the four P3 cards, and the P4 texture settle
+    from a slight over-scale as their scene enters.
+  - Existing phase-by-phase element reveals retained (reversible on scroll-up).
+- **Clickable chapter filmstrip** (replaces the old bare bar+counter; desktop-only,
+  interactive `nav`): each chapter scrubs the pinned timeline to that scene by converting
+  the scene index to an exact document target (`st.start + p·(st.end−st.start)`) and
+  scrolling there through the shared Lenis (`getLenis()`), native fallback otherwise. The
+  active chapter is highlighted imperatively in `onUpdate` via `data-active` +
+  `aria-current` (no per-frame React re-render). Mobile (no pin) falls back to
+  `scrollIntoView` on the panel.
+- **Scroll cue** ("Scroll to explore →") fades out the instant `progress > 0.01`.
+- Cleanup `clearProps` list extended to the new animated targets; `ScrollTrigger` instance
+  captured in a ref (`tl.scrollTrigger`) — this also removes the former unused-import /
+  unused-`distance` lint warnings.
+
+### Scroll-video stage — `components/sections/scroll-video.tsx`
+- Added a `<CinematicOverlay>` (grain + gentle vignette) inside the existing dark video
+  stage for the same filmic grade. No change to the scrub logic or poster fallback.
+
+### Verified (Phase 21)
+- `tsc --noEmit` clean; `eslint` **0 problems** (previous horizontal-story warnings
+  resolved); `next build` prerenders all 9 routes as static. Chapter filmstrip
+  (`aria-label="Story chapters"`, chapter labels) and the scroll cue confirmed present in
+  the prerendered homepage HTML.
+- **Not browser-verified** (no automation here). Recommended manual QA: desktop pinned
+  horizontal scroll feel + reverse; chapter-click jumps land each scene centered; grain/
+  vignette subtlety on cream vs dark panels; scroll cue fades on first move; mobile stacked
+  fallback stays clean (no overlay/nav, content visible); reduced motion disables the
+  scene motion while leaving everything readable.
+
+## Phase 22 Decisions — Root-Cause Fix: Large Blank Viewport at the Scroll-Video Section
+
+### Symptom (user-confirmed, during real scrolling)
+A large empty area while scrolling between the upper homepage sections and the
+Formula/Ingredients content — i.e. around the scroll-video section (`#film`).
+
+### Root cause
+`components/sections/scroll-video.tsx` applied `lg:h-screen lg:py-0` **unconditionally** on
+desktop. But the scroll-scrub pin is only ever created once a video with valid duration
+metadata loads (`init()` in the `matchMedia` block). **No real MP4 exists yet**
+(`/videos/osmekos-body-lotion-story.mp4` is a placeholder), so the pin never initialises —
+yet the section still reserved a full `100vh`, rendering as an almost-empty viewport
+(just the poster card + copy) sandwiched between the pinned horizontal story and the green
+Formula section. That reserved-but-unused viewport is the blank the user scrolled through.
+
+### Fix
+- Added a `pinned` state, set to `true` only inside `init()` right after the pin's
+  `ScrollTrigger` is created (and `false` in the matchMedia cleanup). It is set from the
+  `loadedmetadata` event callback, not synchronously in an effect, so it is lint-safe.
+- The section height is now conditional: `pinned ? "lg:h-screen lg:py-0" : "lg:py-28"`.
+  With no video (current state) the section sizes to its content as a normal premium
+  editorial block — no empty viewport. When a conforming MP4 is dropped in later, the pin
+  initialises, `pinned` flips true, and the full-height scrubbed experience returns with no
+  other code change. Mobile was already `py-20` (no `h-screen`), so it was unaffected.
+- No change to the scrub logic, poster fallback, dev-note, or reduced-motion behaviour.
+
+### Verified (Phase 22)
+- `tsc --noEmit` clean; `eslint` 0 problems; `next build` prerenders all 9 routes as static.
+- Prerendered homepage HTML confirms `#film` now carries `lg:py-28` (not `lg:h-screen`).
+- Other pinned section (`#story` horizontal story) is intentionally `lg:h-screen` — it pins
+  on every desktop load, so its pin-spacer scroll distance is consumed by the horizontal
+  journey and is correct (a full-page *screenshot* of it still shows a tall band by nature
+  of ScrollTrigger pinning; that is an artifact, not a runtime gap).
+- **Not browser-verified** here. Manual QA: scroll `/` on desktop — the video section now
+  reads as a tight editorial block with the poster, flowing directly into Formula with no
+  empty viewport; horizontal story still pins/releases cleanly before it.
+
+## Phase 23 Decisions — Root-Cause Fix: Scroll-Reveals Left Route-Page Content Invisible
+
+### Symptom (from user full-page screenshots)
+Large empty panels on the route pages: `/product/body-lotion` showed an empty sage
+`#formula` panel; `/ingredients` showed an over-tall dark ceramide panel with no cards and a
+huge blank where the four ingredient sections belong; `/our-story` `#thoughtful-care` showed
+an empty media box. The homepage full-page screenshot also shows a large band after the
+Product Showcase — that one is the **horizontal-story pin-spacer** (inherent to any
+ScrollTrigger pin; it is the horizontal journey during real scroll, not a bug).
+
+### Root cause
+`Reveal`, `RevealHeading`, and `CeramideCards` animate with GSAP `from()` (default
+`immediateRender: true`), which **pre-applies the hidden start state** (`autoAlpha:0` /
+clipped words / offset cards) and only reveals when the element's ScrollTrigger fires. On
+the **static route pages** (Phase 14 added these reveals, against the Phase 11 "routes are
+always-visible" rule), any below-the-fold content therefore stays invisible until scrolled
+to — and in a **full-page screenshot / no-scroll capture / fast scroll / misfired trigger**
+the trigger never fires, so the content is captured blank. This is the Phase-09
+"stuck invisible" failure mode, re-introduced onto the routes.
+
+### Fix (one shared helper, applied in the three primitives)
+- Added `inInitialViewport(el)` to `lib/animations/reveal.ts`.
+- `components/animations/reveal.tsx` (both normal + `media` timelines),
+  `components/animations/reveal-heading.tsx`, and
+  `components/sections/ceramide-cards.tsx` now pass
+  `immediateRender: inInitialViewport(el)` to their `from()` tweens:
+  - **Above/at the fold** → `immediateRender: true`: pre-hidden, clean on-load entrance that
+    always fires via the provider's `ScrollTrigger.refresh()` (fonts.ready + load).
+  - **Below the fold** → `immediateRender: false`: the element renders at its natural
+    (visible) state and only animates when actually scrolled into view — so content is
+    **never** left stuck invisible (screenshots, no-scroll captures, fast scroll, misfires),
+    while the scroll entrance is preserved for normal browsing.
+- Reduced motion still early-returns in every primitive (content fully visible). No markup,
+  copy, routes, or Lenis/ScrollTrigger wiring changed; SSR already emitted the content.
+
+### Note on the homepage "blank" band
+The horizontal story (`#story`) is intentionally `lg:h-screen` + pinned on every desktop
+load; its pin-spacer scroll distance is the horizontal journey. A **full-page screenshot**
+of it will always show a tall band (ScrollTrigger renders the pinned scene frozen); that is
+a capture artifact, not a runtime gap, and removing it would mean removing the signature
+pinned interaction.
+
+### Verified (Phase 23)
+- `tsc --noEmit` clean; `eslint` 0 problems; `next build` prerenders all 9 routes as static;
+  all route content confirmed present in prerendered HTML (it was never missing — the client
+  reveal was hiding it).
+- **Not browser-verified** here. Manual QA: on `/ingredients`, `/product/body-lotion`,
+  `/our-story` take a full-page screenshot and confirm every section renders (no empty
+  panels); scroll normally and confirm below-fold sections still animate in; above-fold
+  headings/media still play their on-load entrance; reduced motion shows everything.
+
+## Phase 24 Decisions — Reveal "double-animation" Fix + Horizontal Story Redesign
+
+### 1. Fixed the "content is there, then snaps back and re-animates" flash
+Phase 23 made below-fold reveals `immediateRender:false` (visible by default) but kept the
+old trigger start (`top 85/90%`), so an element became partly visible, then the trigger
+fired, snapped it to the hidden start, and re-animated — a visible double-reveal.
+- **Fix:** for below-fold elements the trigger start is now `"top bottom"` (fires the instant
+  the element's top enters from the viewport bottom, while it is still ~0% visible), so there
+  is no pre-visible flash; above-fold keeps its original start + `immediateRender:true` clean
+  on-load entrance. Applied in `components/animations/reveal.tsx`,
+  `components/animations/reveal-heading.tsx`, and `components/sections/ceramide-cards.tsx`
+  (all via `inInitialViewport`). Content is still never left stuck invisible.
+
+### 2. Horizontal story (`components/sections/horizontal-story.tsx`) redesign
+Per user feedback ("remove the numbers; the top titles collide with the navbar and aren't
+legible; content looks half-faded"):
+- **Removed the oversized `01–04` background numerals** (and their parallax drift).
+- **Removed the per-scene exit dimming** (`autoAlpha:0.3` fades). Each scene's content now
+  settles in once and **stays fully visible** as it crosses the viewport (no more half-faded
+  panels mid-scrub). Entrance reveals + media ken-burns are kept.
+- **Replaced the top chapter filmstrip** (which overlapped the fixed navbar/wordmark and was
+  illegible over the dark panels) with **one legible floating indicator pill at the bottom**
+  (`bottom-6`, clear of the navbar): an ivory, blurred surface with clickable chapter tabs
+  (active tab = filled deep-green, still scrubs the pinned timeline to that scene via
+  `goToScene`) and a thin progress line that follows scroll. Legible over any panel colour.
+- **Removed the breathing vignette** (it darkened scenes mid-transition) and the separate
+  scroll cue; kept a restrained **static** film grain only.
+- Eyebrows simplified (dropped the leading `01 —` numbers from panel labels).
+- Preserved the on-disk `data-surface`/`data-theme="dark"` attributes on panels 02 & 04.
+
+### Verified (Phase 24)
+- `tsc --noEmit` clean; `eslint` 0 errors (1 unused-var warning in `navigation.tsx` is a
+  pre-existing in-progress change, not from this work); `next build` prerenders all 9 routes.
+- Prerendered homepage HTML confirms: `hs-numeral` removed (0 occurrences), scroll cue
+  removed, and the new bottom "Story chapters" indicator present.
+- **Not browser-verified** here. Manual QA: scroll `/` — reveals play once (no re-animate
+  flash); horizontal story shows no giant numbers, panels stay crisp, the bottom pill is
+  legible over every panel and its tabs jump to scenes; mobile stacked fallback unchanged.
+
+## Phase 25 Decisions — FINAL reveal behavior: classic pre-hidden scroll-reveal (do not change)
+
+### Problem
+Phases 23–24 tried to keep below-the-fold content "visible by default" (`immediateRender:false`)
+so full-page screenshots wouldn't show empty panels. In a real browser that produced a bad
+UX the user flagged twice: content was **already visible**, then a split-second later it
+**snapped to hidden and re-animated**. Any `immediateRender:false` approach has a window where
+the content is on screen before the trigger fires, so the flash is unavoidable that way.
+
+### Decision (reverted to the Phase-14 model — this is intended, do NOT re-introduce `immediateRender:false`)
+`Reveal`, `RevealHeading`, and `CeramideCards` use plain GSAP `from()` (default
+`immediateRender:true`) with their original `start` values (`top 85%` / `top 90%` / `top 82%`)
+and `once:true`. The hidden start state is applied inside the **`useGSAP` layout effect, before
+the browser paints**, so content is hidden first and then animates in when its ScrollTrigger
+enters the viewport — the standard "appears on scroll" behavior with **no visible-first flash**.
+Removed the `inInitialViewport` helper from `lib/animations/reveal.ts` (now unused).
+
+### Accepted trade-off (not a bug)
+Below-the-fold content is intentionally hidden until scrolled to. A **no-scroll full-page
+screenshot** therefore shows below-fold sections un-revealed — that is inherent to scroll-reveal
+and is NOT a runtime gap. The Phase-09 safeguards (one Lenis rAF loop; `ScrollTrigger.refresh()`
+on `document.fonts.ready` + window `load`; `once:true`) keep above-the-fold content revealed on
+load and prevent any real "stuck invisible" during actual browsing. Reduced motion still
+early-returns in every primitive, leaving content fully visible.
+
+### Verified (Phase 25)
+- No `immediateRender` / `inInitialViewport` references remain (grep clean).
+- `tsc --noEmit` clean; `eslint` 0 errors (1 unused-var warning in `navigation.tsx` is an
+  unrelated in-progress edit on disk); `next build` prerenders all 9 routes as static.
+- **Not browser-verified** here. Manual QA: scroll each route — every section is hidden until
+  reached, then animates in once (never "there, then re-animates"); above-the-fold hero/first
+  section plays its entrance on load; reduced motion shows everything immediately.
+

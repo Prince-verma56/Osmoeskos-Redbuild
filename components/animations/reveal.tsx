@@ -49,6 +49,12 @@ export function Reveal({
       const el = ref.current;
       if (!el) return;
 
+      // Classic scroll-reveal: the hidden start state is applied here in the
+      // useGSAP layout effect (before the browser paints), so content never
+      // flashes visible first — it is hidden, then animates in once its
+      // ScrollTrigger enters. `once:true` + the provider's post-load/fonts
+      // ScrollTrigger.refresh() ensure above-the-fold content reveals on load
+      // and nothing is left stuck invisible.
       if (media) {
         const img = el.querySelector("img");
         const tl = gsap.timeline({

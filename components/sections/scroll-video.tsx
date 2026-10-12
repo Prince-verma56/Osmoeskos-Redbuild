@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger } from "@/lib/animations/gsap";
+import { CinematicOverlay } from "@/components/visual/cinematic-overlay";
 
 /**
  * Signature Experience B — Scroll-controlled video scrubbing.
@@ -63,6 +64,11 @@ export function ScrollVideo({
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
   );
+  // True only once the scroll-scrub pin is actually created (valid video
+  // metadata). Until then the section must size to its content — NOT reserve a
+  // full 100vh, which would leave a large empty viewport between sections when
+  // no real video asset exists yet.
+  const [pinned, setPinned] = useState(false);
 
   useGSAP(
     () => {
@@ -115,6 +121,7 @@ export function ScrollVideo({
 
             // Geometry just changed (a pin was added) — re-measure.
             ScrollTrigger.refresh();
+            setPinned(true);
           };
 
           const onMeta = () => init();
@@ -130,6 +137,7 @@ export function ScrollVideo({
             video.removeEventListener("error", onError);
             st?.kill();
             tween?.kill();
+            setPinned(false);
           };
         },
       );
@@ -147,7 +155,9 @@ export function ScrollVideo({
       ref={sectionRef}
       id="film"
       aria-labelledby="film-heading"
-      className="relative flex w-full items-center overflow-hidden bg-background px-6 py-20 md:px-12 lg:h-screen lg:py-0 lg:px-24 scroll-mt-20 lg:scroll-mt-24"
+      className={`relative flex w-full items-center overflow-hidden bg-background px-6 py-20 md:px-12 lg:px-24 scroll-mt-20 lg:scroll-mt-24 ${
+        pinned ? "lg:h-screen lg:py-0" : "lg:py-28"
+      }`}
     >
       <div className="mx-auto grid w-full max-w-[90rem] grid-cols-1 items-center gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-16">
         {/* Video stage */}
@@ -175,6 +185,13 @@ export function ScrollVideo({
               className="object-cover object-center"
             />
           )}
+
+          {/* Cinematic film grain + vignette for graded-footage depth. */}
+          <CinematicOverlay
+            grainOpacity={0.06}
+            vignetteStrength={0.34}
+            className="rounded-[inherit]"
+          />
 
           {/* Soft edge vignette for depth; never obscures the frame. */}
           <div

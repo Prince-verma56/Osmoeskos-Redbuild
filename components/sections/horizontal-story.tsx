@@ -6,34 +6,66 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger } from "@/lib/animations/gsap";
 import { prefersReducedMotion } from "@/lib/animations/reveal";
+import { getLenis } from "@/lib/animations/lenis-store";
 import { ingredients } from "@/lib/osmekos-data";
+import { CinematicOverlay } from "@/components/visual/cinematic-overlay";
 
 /**
- * Signature Experience A — Horizontal Product Storytelling.
+ * Signature Experience A — Cinematic Horizontal Product Storytelling.
  *
- * Each panel is a full-screen scene (100vw on desktop).
- * On desktop (>=1024px), the section pins cleanly at the top of the viewport
- * and translates horizontally through all 4 scenes as the user scrolls vertically.
+ * Desktop (>=1024px, no reduced motion): the section pins and a full-screen
+ * flex-row track translates horizontally as the user scrolls vertically, on top
+ * of the proven Phase-19 pinning/distance math. Each scene's content settles in
+ * once (header → details) and STAYS fully visible as it crosses the viewport —
+ * no dimming — with a gentle media ken-burns and a restrained static film grade.
  *
- * Micro-animations are synchronized to the master scrub timeline:
- * - Scene 1: Initial focus, gentle exit dimming.
- * - Scene 2: Header reveals, followed by staggered entrance of ceramides NP, AP, EOP.
- * - Scene 3: Header reveals, followed by staggered rise & scale settle of the 4 botanical cards.
- * - Scene 4: Texture background settles from scale, editorial headline and CTA bloom in.
+ * Orientation is a single legible floating indicator pill at the bottom (clear
+ * of the fixed navbar): its chapter tabs are clickable and scrub the pinned
+ * timeline to that scene, and its progress line follows the scroll.
  *
- * All animations smoothly reverse when scrolling backward.
- * On mobile (<1024px) and under reduced motion, content stacks vertically and stays fully visible.
+ * Mobile (<1024px) / reduced motion: the same panels render as a normal vertical
+ * stack — no pin, no trap, all copy visible without JS. The grain overlay and
+ * indicator are desktop-only so mobile stays clean.
  */
 
 const ceramideCodes = ["NP", "AP", "EOP"] as const;
+const chapterLabels = [
+  "Daily Ritual",
+  "The Complex",
+  "Botanicals",
+  "Texture",
+] as const;
 
 export function HorizontalStory() {
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
-  const counterRef = useRef<HTMLSpanElement>(null);
+  const stRef = useRef<ScrollTrigger | null>(null);
+  const chapterBtnRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   const panelCount = 4;
+
+  const goToScene = (index: number) => {
+    const reduce = prefersReducedMotion();
+    const st = stRef.current;
+    const lenis = getLenis();
+
+    if (st) {
+      // Pinned: translate scene index → an exact document scroll target so the
+      // scrubbed timeline lands that scene centered in the viewport.
+      const p = panelCount > 1 ? index / (panelCount - 1) : 0;
+      const target = Math.round(st.start + p * (st.end - st.start));
+      if (lenis && !reduce) lenis.scrollTo(target, { duration: 1.1 });
+      else window.scrollTo({ top: target, behavior: reduce ? "auto" : "smooth" });
+      return;
+    }
+    // Not pinned (mobile / reduced motion): scroll the panel into view.
+    const panels = trackRef.current?.querySelectorAll<HTMLElement>(".hs-panel");
+    panels?.[index]?.scrollIntoView({
+      behavior: reduce ? "auto" : "smooth",
+      block: "start",
+    });
+  };
 
   useGSAP(
     () => {
@@ -57,14 +89,12 @@ export function HorizontalStory() {
             (sum, p) => sum + p.offsetWidth,
             0,
           );
-          // Guaranteed distance: at least (panelCount - 1) viewport widths
+          // Guaranteed distance: at least (panelCount - 1) viewport widths.
           return Math.max(
             window.innerWidth * (panelCount - 1),
             totalPanelsWidth - window.innerWidth,
           );
         };
-
-        const distance = getDistance();
 
         const tl = gsap.timeline({
           scrollTrigger: {
@@ -79,121 +109,97 @@ export function HorizontalStory() {
               if (barRef.current) {
                 barRef.current.style.width = `${Math.max(4, self.progress * 100)}%`;
               }
-              if (counterRef.current) {
-                const idx = Math.min(
-                  panelCount - 1,
-                  Math.round(self.progress * (panelCount - 1)),
-                );
-                counterRef.current.textContent = String(idx + 1).padStart(
-                  2,
-                  "0",
-                );
-              }
+              const idx = Math.min(
+                panelCount - 1,
+                Math.round(self.progress * (panelCount - 1)),
+              );
+              chapterBtnRefs.current.forEach((btn, bi) => {
+                if (!btn) return;
+                const on = bi === idx;
+                btn.dataset.active = on ? "true" : "false";
+                btn.setAttribute("aria-current", on ? "true" : "false");
+              });
             },
           },
         });
 
-        // 1. Linear horizontal ribbon translation
-        tl.to(
-          track,
-          {
-            x: () => -getDistance(),
-            ease: "none",
-            duration: 3,
-          },
-          0,
-        );
+        stRef.current = tl.scrollTrigger ?? null;
 
-        // 2. Coordinated phase-by-phase scene reveals (skipped under reduced motion)
+        // 1. Linear horizontal ribbon translation
+        tl.to(track, { x: () => -getDistance(), ease: "none", duration: 3 }, 0);
+
+        // 2. Per-scene reveals + media ken-burns (skipped under reduced motion).
+        //    Content settles in once and stays fully visible — no exit dimming.
         if (!reduce) {
-          // Scene 1: soft exit fade
-          tl.to(
-            ".p1-content",
-            { autoAlpha: 0.35, y: -20, duration: 0.45, ease: "power2.inOut" },
-            0.55,
+          // Scene 1: product still settles from a slight over-scale.
+          tl.fromTo(
+            ".p1-media img",
+            { scale: 1.12 },
+            { scale: 1, duration: 1.2, ease: "power2.out" },
+            0,
           );
 
-          // Scene 2: Header reveals, then ceramides stagger in one by one
+          // Scene 2: header rises, then the three ceramides stagger in.
           tl.fromTo(
             ".p2-header",
             { autoAlpha: 0, y: 40 },
-            { autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out" },
-            0.62,
+            { autoAlpha: 1, y: 0, duration: 0.45, ease: "power2.out" },
+            0.55,
           );
           tl.fromTo(
             ".p2-ceramide-row",
-            { autoAlpha: 0, y: 45, x: 24 },
-            {
-              autoAlpha: 1,
-              y: 0,
-              x: 0,
-              duration: 0.36,
-              stagger: 0.12,
-              ease: "power2.out",
-            },
-            0.72,
+            { autoAlpha: 0, y: 36 },
+            { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.12, ease: "power2.out" },
+            0.68,
           );
 
-          // Scene 2: soft exit fade
-          tl.to(
-            [".p2-header", ".p2-ceramide-row"],
-            { autoAlpha: 0.3, y: -20, duration: 0.45, ease: "power2.inOut" },
-            1.55,
-          );
-
-          // Scene 3: Header reveals, then 4 ingredient cards stagger & lift in
+          // Scene 3: header rises, then the four botanical cards lift + settle.
           tl.fromTo(
             ".p3-header",
             { autoAlpha: 0, y: 40 },
-            { autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out" },
-            1.62,
+            { autoAlpha: 1, y: 0, duration: 0.45, ease: "power2.out" },
+            1.55,
           );
           tl.fromTo(
             ".p3-ingredient-card",
-            { autoAlpha: 0, y: 55, scale: 0.9 },
-            {
-              autoAlpha: 1,
-              y: 0,
-              scale: 1,
-              duration: 0.38,
-              stagger: 0.1,
-              ease: "power2.out",
-            },
-            1.72,
+            { autoAlpha: 0, y: 48, scale: 0.94 },
+            { autoAlpha: 1, y: 0, scale: 1, duration: 0.42, stagger: 0.1, ease: "power2.out" },
+            1.66,
+          );
+          tl.fromTo(
+            ".p3-ingredient-card img",
+            { scale: 1.14 },
+            { scale: 1, duration: 0.9, stagger: 0.06, ease: "power2.out" },
+            1.66,
           );
 
-          // Scene 3: soft exit fade
-          tl.to(
-            [".p3-header", ".p3-ingredient-card"],
-            { autoAlpha: 0.3, y: -20, duration: 0.45, ease: "power2.inOut" },
-            2.52,
-          );
-
-          // Scene 4: Cream texture settles from slight scale, content blooms in
+          // Scene 4: cream texture settles from scale, content blooms in.
           tl.fromTo(
             ".p4-bg",
-            { scale: 1.14 },
-            { scale: 1.0, duration: 0.65, ease: "power2.out" },
-            2.42,
+            { scale: 1.16 },
+            { scale: 1.0, duration: 0.9, ease: "power2.out" },
+            2.4,
           );
           tl.fromTo(
             ".p4-content",
-            { autoAlpha: 0, y: 45 },
-            { autoAlpha: 1, y: 0, duration: 0.45, ease: "power2.out" },
-            2.52,
+            { autoAlpha: 0, y: 44 },
+            { autoAlpha: 1, y: 0, duration: 0.5, ease: "power2.out" },
+            2.55,
           );
         }
 
         return () => {
           tl.kill();
+          stRef.current = null;
           gsap.set(
             [
               track,
-              ".p1-content",
+              ".p1-media img",
               ".p2-header",
               ".p2-ceramide-row",
               ".p3-header",
               ".p3-ingredient-card",
+              ".p3-ingredient-card img",
               ".p4-bg",
               ".p4-content",
             ],
@@ -214,33 +220,9 @@ export function HorizontalStory() {
       aria-labelledby="story-heading"
       className="relative z-20 w-full overflow-hidden bg-[#EAE4D9] lg:h-screen"
     >
-      {/* Accessible section title */}
       <h2 id="story-heading" className="sr-only">
         The OsmeKos Body Lotion story
       </h2>
-
-      {/* Progress indicator — desktop only */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 z-30 hidden items-center gap-4 px-8 pt-8 lg:flex xl:px-16"
-      >
-        <span
-          ref={counterRef}
-          className="type-eyebrow text-[0.625rem] text-[#243526]/60"
-        >
-          01
-        </span>
-        <div className="relative h-[2px] flex-1 overflow-hidden rounded-full bg-[#243526]/12">
-          <div
-            ref={barRef}
-            className="absolute inset-y-0 left-0 rounded-full bg-[#243526]/70 transition-none"
-            style={{ width: "4%" }}
-          />
-        </div>
-        <span className="type-eyebrow text-[0.625rem] text-[#243526]/40">
-          {String(panelCount).padStart(2, "0")}
-        </span>
-      </div>
 
       {/* Panel track — stacked vertically on mobile, full-screen horizontal ribbon on desktop */}
       <div
@@ -248,10 +230,10 @@ export function HorizontalStory() {
         className="flex w-full flex-col lg:h-screen lg:w-max lg:flex-row lg:flex-nowrap"
       >
         {/* Panel 01 — Daily Body Care */}
-        <article className="hs-panel flex w-full shrink-0 flex-col justify-center gap-10 px-6 py-20 sm:px-10 lg:h-screen lg:w-screen lg:flex-row lg:items-center lg:gap-20 lg:py-0 lg:px-24 xl:px-32">
-          <div className="p1-content flex max-w-lg flex-col items-start gap-6 lg:order-1 will-change-transform">
+        <article className="hs-panel relative flex w-full shrink-0 flex-col justify-center gap-10 overflow-hidden px-6 py-20 sm:px-10 lg:h-screen lg:w-screen lg:flex-row lg:items-center lg:gap-20 lg:py-0 lg:px-24 xl:px-32">
+          <div className="p1-content relative z-10 flex max-w-lg flex-col items-start gap-6 lg:order-1">
             <span className="type-eyebrow text-[0.6875rem] text-accent">
-              01 — Daily Ritual
+              Daily Ritual
             </span>
             <h3 className="font-heading text-4xl leading-[1.05] text-[#25291F] md:text-5xl lg:text-6xl">
               Care begins with the everyday.
@@ -270,7 +252,7 @@ export function HorizontalStory() {
               </span>
             </Link>
           </div>
-          <div className="relative aspect-[4/5] w-full max-w-sm overflow-hidden rounded-[2rem] bg-background shadow-xl lg:order-2 lg:max-w-md xl:max-w-lg">
+          <div className="p1-media relative z-10 aspect-[4/5] w-full max-w-sm overflow-hidden rounded-[2rem] bg-background shadow-xl lg:order-2 lg:max-w-md xl:max-w-lg">
             <Image
               src="/images/osmekos-product-detail.jpg"
               alt="OsmeKos Body Lotion on a stone plinth"
@@ -282,10 +264,14 @@ export function HorizontalStory() {
         </article>
 
         {/* Panel 02 — Triple Ceramide Complex */}
-        <article className="hs-panel flex w-full shrink-0 flex-col justify-center gap-10 bg-[#243526] px-6 py-20 text-[#F7F5EF] sm:px-10 lg:h-screen lg:w-screen lg:flex-row lg:items-center lg:gap-20 lg:px-24 lg:py-0 xl:px-32">
-          <div className="p2-header flex max-w-md flex-col gap-5 will-change-transform">
+        <article
+          data-surface="dark"
+          data-theme="dark"
+          className="hs-panel relative flex w-full shrink-0 flex-col justify-center gap-10 overflow-hidden bg-[#243526] px-6 py-20 text-[#F7F5EF] sm:px-10 lg:h-screen lg:w-screen lg:flex-row lg:items-center lg:gap-20 lg:px-24 lg:py-0 xl:px-32"
+        >
+          <div className="p2-header relative z-10 flex max-w-md flex-col gap-5">
             <span className="type-eyebrow text-[0.6875rem] text-[#B7A06B]">
-              02 — The Complex
+              The Complex
             </span>
             <h3 className="font-heading text-4xl leading-[1.05] text-[#F9F5EB] md:text-5xl lg:text-6xl">
               Triple Ceramide Complex.
@@ -295,11 +281,11 @@ export function HorizontalStory() {
               skin&apos;s natural moisture barrier, day after day.
             </p>
           </div>
-          <div className="flex flex-1 flex-col gap-0 max-w-2xl">
+          <div className="relative z-10 flex max-w-2xl flex-1 flex-col gap-0">
             {ceramideCodes.map((code, i) => (
               <div
                 key={code}
-                className="p2-ceramide-row flex items-baseline gap-6 border-t border-[#F7F5EF]/15 py-6 first:border-t-0 sm:gap-10 will-change-transform"
+                className="p2-ceramide-row flex items-baseline gap-6 border-t border-[#F7F5EF]/15 py-6 first:border-t-0 sm:gap-10"
               >
                 <span className="font-heading text-[2.75rem] leading-none text-[#B7A06B] sm:text-6xl lg:text-7xl">
                   {code}
@@ -320,10 +306,10 @@ export function HorizontalStory() {
         </article>
 
         {/* Panel 03 — Botanical Ingredients */}
-        <article className="hs-panel flex w-full shrink-0 flex-col justify-center gap-8 bg-[#DCE3D4] px-6 py-20 sm:px-10 lg:h-screen lg:w-screen lg:justify-center lg:px-24 lg:py-0 xl:px-32">
-          <div className="p3-header flex max-w-xl flex-col gap-3 will-change-transform">
+        <article className="hs-panel relative flex w-full shrink-0 flex-col justify-center gap-8 overflow-hidden bg-[#DCE3D4] px-6 py-20 sm:px-10 lg:h-screen lg:w-screen lg:justify-center lg:px-24 lg:py-0 xl:px-32">
+          <div className="p3-header relative z-10 flex max-w-xl flex-col gap-3">
             <span className="type-eyebrow text-[0.6875rem] text-[#243526]/70">
-              03 — From Nature
+              From Nature
             </span>
             <h3 className="font-heading text-4xl leading-[1.05] text-[#243526] md:text-5xl lg:text-6xl">
               Botanical ingredients.
@@ -333,11 +319,11 @@ export function HorizontalStory() {
               actives — each at a confirmed concentration.
             </p>
           </div>
-          <ul className="grid grid-cols-2 gap-5 lg:grid-cols-4 lg:gap-8 max-w-5xl">
+          <ul className="relative z-10 grid max-w-5xl grid-cols-2 gap-5 lg:grid-cols-4 lg:gap-8">
             {ingredients.map((ing) => (
               <li
                 key={ing.id}
-                className="p3-ingredient-card flex flex-col gap-3 will-change-transform"
+                className="p3-ingredient-card flex flex-col gap-3"
               >
                 <div className="relative aspect-square w-full overflow-hidden rounded-[1.5rem] bg-background shadow-sm">
                   <Image
@@ -362,8 +348,12 @@ export function HorizontalStory() {
         </article>
 
         {/* Panel 04 — Texture & Experience */}
-        <article className="hs-panel relative flex w-full shrink-0 flex-col justify-end overflow-hidden px-6 py-20 sm:px-10 lg:h-screen lg:w-screen lg:justify-center lg:px-24 lg:py-0 xl:px-32">
-          <div className="p4-bg absolute inset-0 -z-10 will-change-transform">
+        <article
+          data-surface="dark"
+          data-theme="dark"
+          className="hs-panel relative flex w-full shrink-0 flex-col justify-end overflow-hidden px-6 py-20 sm:px-10 lg:h-screen lg:w-screen lg:justify-center lg:px-24 lg:py-0 xl:px-32"
+        >
+          <div className="p4-bg absolute inset-0 -z-10">
             <Image
               src="/images/Luminous Lotion on Dewy Skin.png"
               alt="A swathe of OsmeKos lotion catching the light on skin"
@@ -376,9 +366,9 @@ export function HorizontalStory() {
               className="absolute inset-0 bg-gradient-to-t from-[#1b2a1f]/85 via-[#1b2a1f]/35 to-transparent lg:bg-gradient-to-r lg:from-[#1b2a1f]/85 lg:via-[#1b2a1f]/30 lg:to-transparent"
             />
           </div>
-          <div className="p4-content flex max-w-lg flex-col items-start gap-6 text-[#F7F5EF] will-change-transform">
+          <div className="p4-content relative z-10 flex max-w-lg flex-col items-start gap-6 text-[#F7F5EF]">
             <span className="type-eyebrow text-[0.6875rem] text-[#E9DFBF]">
-              04 — Texture & Feel
+              Texture &amp; Feel
             </span>
             <h3 className="font-heading text-4xl leading-[1.05] md:text-5xl lg:text-6xl">
               A finish that feels like care.
@@ -398,6 +388,46 @@ export function HorizontalStory() {
             </Link>
           </div>
         </article>
+      </div>
+
+      {/* Restrained static film grain — desktop only (no animated vignette). */}
+      <div className="pointer-events-none absolute inset-0 z-[25] hidden lg:block">
+        <CinematicOverlay grain vignette={false} grainOpacity={0.05} />
+      </div>
+
+      {/* Chapter indicator — one legible floating pill, clear of the navbar.
+          Tabs are clickable (scrub to a scene); the line follows scroll. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 hidden justify-center px-4 lg:flex">
+        <div className="pointer-events-auto flex flex-col gap-2.5 rounded-[1.25rem] border border-[#243526]/10 bg-[#F7F5EF]/88 px-3 py-2.5 shadow-[0_0.6rem_2rem_rgba(36,53,38,0.16)] backdrop-blur-md">
+          <nav aria-label="Story chapters">
+            <ol className="flex items-center gap-1">
+              {chapterLabels.map((label, i) => (
+                <li key={label}>
+                  <button
+                    type="button"
+                    ref={(el) => {
+                      chapterBtnRefs.current[i] = el;
+                    }}
+                    data-active={i === 0 ? "true" : "false"}
+                    aria-current={i === 0 ? "true" : undefined}
+                    onClick={() => goToScene(i)}
+                    className="group flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[#77766C] transition-colors duration-300 hover:text-[#243526] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B] data-[active=true]:bg-[#243526] data-[active=true]:text-[#F7F5EF]"
+                  >
+                    <span className="tabular-nums opacity-60">0{i + 1}</span>
+                    {label}
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </nav>
+          <div className="relative mx-2 h-[2px] overflow-hidden rounded-full bg-[#243526]/12">
+            <div
+              ref={barRef}
+              className="absolute inset-y-0 left-0 rounded-full bg-[#243526]/70"
+              style={{ width: "4%" }}
+            />
+          </div>
+        </div>
       </div>
     </section>
   );

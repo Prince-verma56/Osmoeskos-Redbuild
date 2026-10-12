@@ -45,6 +45,8 @@ export function FormulaStorytelling() {
     <section
       id="formula"
       ref={sectionRef}
+      data-surface="dark"
+      data-theme="dark"
       aria-labelledby="formula-heading"
       className="relative isolate flex min-h-[40rem] w-full items-center overflow-hidden bg-[#243526] px-6 py-24 text-[#F7F5EF] md:px-12 lg:min-h-[48rem] lg:px-24 lg:py-44 scroll-mt-0"
     >

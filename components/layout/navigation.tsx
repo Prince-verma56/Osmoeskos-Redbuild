@@ -8,6 +8,7 @@ import { ArrowUpRight, ChevronDown, Menu, Search, X } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { filterSearchResults } from "@/lib/search-data";
+import { getLenis } from "@/lib/animations/lenis-store";
 
 type MenuKey = "story" | "product" | "ingredients" | "shop";
 
@@ -278,6 +279,7 @@ export function Navigation() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isHeroAtTop, setIsHeroAtTop] = useState(pathname === "/");
+  const [isDarkSurface, setIsDarkSurface] = useState(false);
   const [panelPosition, setPanelPosition] = useState<{
     top: number;
     left: number;
@@ -336,6 +338,23 @@ export function Navigation() {
       setIsHeroAtTop((current) =>
         current === nextHeroAtTop ? current : nextHeroAtTop,
       );
+
+      // Check if navbar viewport area (Y ≈ 55px) intersects any dark surface
+      const navY = 55;
+      const darkElements = document.querySelectorAll(
+        '[data-surface="dark"], [data-theme="dark"]'
+      );
+      let dark = false;
+      for (let i = 0; i < darkElements.length; i++) {
+        const rect = darkElements[i].getBoundingClientRect();
+        if (rect.top <= navY && rect.bottom >= navY) {
+          if (rect.left < window.innerWidth && rect.right > 0) {
+            dark = true;
+            break;
+          }
+        }
+      }
+      setIsDarkSurface((current) => (current === dark ? current : dark));
     };
 
     const requestHeaderSurfaceUpdate = () => {
@@ -350,9 +369,18 @@ export function Navigation() {
     window.addEventListener("scroll", requestHeaderSurfaceUpdate, {
       passive: true,
     });
+    window.addEventListener("resize", requestHeaderSurfaceUpdate);
+
+    const lenis = getLenis();
+    if (lenis) {
+      lenis.on("scroll", requestHeaderSurfaceUpdate);
+    }
 
     return () => {
       window.removeEventListener("scroll", requestHeaderSurfaceUpdate);
+      window.removeEventListener("resize", requestHeaderSurfaceUpdate);
+      const l = getLenis();
+      if (l) l.off("scroll", requestHeaderSurfaceUpdate);
       if (scrollFrameRef.current !== null) {
         window.cancelAnimationFrame(scrollFrameRef.current);
       }
@@ -537,17 +565,18 @@ export function Navigation() {
       >
         <div
           ref={barRef}
-          className={classes(
-            "mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-3 transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 sm:px-6",
-            !headerIsTransparent &&
-              "rounded-full border border-[#F7F5EF]/70 bg-[#F7F5EF]/90 shadow-[0_0.5rem_2.5rem_rgba(36,53,38,0.12)] supports-backdrop-filter:bg-[#F7F5EF]/76 supports-backdrop-filter:backdrop-blur-xl",
-          )}
+          className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-3 transition-[color] duration-300 sm:px-6"
         >
           <div className="flex min-w-0 items-center gap-7 xl:gap-10">
             <Link
               href="/"
               onClick={closeMenu}
-              className="shrink-0 font-heading text-[1.35rem] font-semibold tracking-[0.01em] text-[#243526] transition-opacity hover:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B7A06B]"
+              className={classes(
+                "shrink-0 font-heading text-[1.35rem] font-semibold tracking-[0.01em] transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B7A06B]",
+                isDarkSurface
+                  ? "text-[#F7F5EF] drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)] hover:text-white"
+                  : "text-[#243526] hover:opacity-75",
+              )}
               aria-label="OsmeKos home"
             >
               OsmeKos
@@ -571,10 +600,14 @@ export function Navigation() {
                   <div
                     key={menuKey}
                     className={classes(
-                      "group/nav flex items-center rounded-full transition-colors",
+                      "group/nav flex items-center rounded-full transition-all duration-300",
                       isHighlighted
-                        ? "bg-[#DCE3D4]/80"
-                        : "hover:bg-[#EAE4D9]/85",
+                        ? isDarkSurface
+                          ? "bg-white/20 shadow-sm supports-backdrop-filter:backdrop-blur-md"
+                          : "bg-[#DCE3D4]/80"
+                        : isDarkSurface
+                          ? "hover:bg-white/10"
+                          : "hover:bg-[#EAE4D9]/85",
                     )}
                     onPointerEnter={(event) => {
                       if (event.pointerType !== "touch") openMenu(menuKey);
@@ -586,9 +619,13 @@ export function Navigation() {
                       aria-current={routeIsActive ? "page" : undefined}
                       className={classes(
                         "rounded-full py-2 pl-3.5 pr-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]",
-                        isHighlighted
-                          ? "text-[#243526]"
-                          : "text-[#25291F]/75 group-hover/nav:text-[#243526]",
+                        isDarkSurface
+                          ? isHighlighted
+                            ? "text-[#F7F5EF] drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
+                            : "text-[#F7F5EF]/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] group-hover/nav:text-white"
+                          : isHighlighted
+                            ? "text-[#243526]"
+                            : "text-[#25291F]/75 group-hover/nav:text-[#243526]",
                       )}
                     >
                       {menu.trigger}
@@ -608,9 +645,13 @@ export function Navigation() {
                       }
                       className={classes(
                         "inline-flex items-center rounded-full py-2 pl-1 pr-3 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]",
-                        isHighlighted
-                          ? "text-[#243526]"
-                          : "text-[#25291F]/75 group-hover/nav:text-[#243526]",
+                        isDarkSurface
+                          ? isHighlighted
+                            ? "text-[#F7F5EF] drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
+                            : "text-[#F7F5EF]/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] group-hover/nav:text-white"
+                          : isHighlighted
+                            ? "text-[#243526]"
+                            : "text-[#25291F]/75 group-hover/nav:text-[#243526]",
                       )}
                     >
                       <ChevronDown
@@ -629,9 +670,10 @@ export function Navigation() {
 
           <div
             className={classes(
-              "hidden items-center gap-2 lg:flex",
-              headerIsTransparent &&
-                "rounded-full border border-[#F7F5EF]/45 bg-transparent px-1.5 py-1 shadow-[0_0.5rem_1.5rem_rgba(36,53,38,0.08)] supports-backdrop-filter:bg-[#F7F5EF]/12 supports-backdrop-filter:backdrop-blur-xl",
+              "hidden items-center gap-2 lg:flex rounded-full border px-1.5 py-1 transition-all duration-300",
+              isDarkSurface
+                ? "border-white/20 bg-white/[0.08] shadow-[0_0.5rem_1.5rem_rgba(0,0,0,0.2)] supports-backdrop-filter:backdrop-blur-xl"
+                : "border-[#243526]/12 bg-[#F7F5EF]/30 shadow-[0_0.5rem_1.5rem_rgba(36,53,38,0.06)] supports-backdrop-filter:backdrop-blur-xl",
             )}
           >
             <button
@@ -642,9 +684,13 @@ export function Navigation() {
               }}
               className={classes(
                 "inline-flex size-9 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]",
-                searchOpen
-                  ? "bg-[#DCE3D4]/80 text-[#243526]"
-                  : "text-[#25291F]/75 hover:bg-[#EAE4D9]/85 hover:text-[#243526]",
+                isDarkSurface
+                  ? searchOpen
+                    ? "bg-white/20 text-[#F7F5EF]"
+                    : "text-[#F7F5EF]/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] hover:bg-white/15 hover:text-white"
+                  : searchOpen
+                    ? "bg-[#DCE3D4]/80 text-[#243526]"
+                    : "text-[#25291F]/75 hover:bg-[#EAE4D9]/85 hover:text-[#243526]",
               )}
               aria-label="Open search"
               aria-expanded={searchOpen}
@@ -655,7 +701,12 @@ export function Navigation() {
               href={megaMenus.shop.href}
               onClick={closeMenu}
               aria-current={pathname.startsWith("/shop") ? "page" : undefined}
-              className="btn-premium btn-premium--primary inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]"
+              className={classes(
+                "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]",
+                isDarkSurface
+                  ? "bg-[#F7F5EF] text-[#243526] hover:bg-white shadow-[0_4px_20px_rgba(247,245,239,0.35)]"
+                  : "btn-premium btn-premium--primary",
+              )}
             >
               Shop Now <span aria-hidden="true" className="btn-premium__arrow">&rarr;</span>
             </Link>
@@ -663,14 +714,20 @@ export function Navigation() {
 
           <div
             className={classes(
-              "flex items-center lg:hidden",
-              headerIsTransparent &&
-                "rounded-full border border-[#F7F5EF]/45 bg-transparent p-1 shadow-[0_0.5rem_1.5rem_rgba(36,53,38,0.08)] supports-backdrop-filter:bg-[#F7F5EF]/12 supports-backdrop-filter:backdrop-blur-xl",
+              "flex items-center lg:hidden rounded-full border p-1 transition-all duration-300",
+              isDarkSurface
+                ? "border-white/20 bg-white/[0.08] shadow-[0_0.5rem_1.5rem_rgba(0,0,0,0.2)] supports-backdrop-filter:backdrop-blur-xl"
+                : "border-[#243526]/12 bg-[#F7F5EF]/30 shadow-[0_0.5rem_1.5rem_rgba(36,53,38,0.06)] supports-backdrop-filter:backdrop-blur-xl",
             )}
           >
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger
-                className="inline-flex size-9 items-center justify-center rounded-full text-[#243526] transition-colors hover:bg-[#EAE4D9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]"
+                className={classes(
+                  "inline-flex size-9 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B7A06B]",
+                  isDarkSurface
+                    ? "text-[#F7F5EF] drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] hover:bg-white/15"
+                    : "text-[#243526] hover:bg-[#EAE4D9]",
+                )}
                 aria-label="Open menu"
               >
                 <Menu className="size-5" aria-hidden="true" />

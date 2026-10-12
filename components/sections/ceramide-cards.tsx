@@ -35,6 +35,9 @@ export function CeramideCards({ variant = "light" }: { variant?: Variant }) {
       if (!el) return;
       const cards = gsap.utils.toArray<HTMLElement>("[data-ceramide-card]", el);
 
+      // Hidden start state applied in this useGSAP layout effect (before paint),
+      // so the cards never flash visible first — they stay hidden, then rise in
+      // once the group's ScrollTrigger enters.
       const tl = gsap.timeline({
         scrollTrigger: { trigger: el, start: "top 82%", once: true },
       });

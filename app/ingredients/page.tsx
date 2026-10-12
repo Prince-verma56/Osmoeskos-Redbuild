@@ -37,6 +37,8 @@ export default function IngredientsPage() {
           intentional uses of botanical green per the design system. */}
       <section
         id="triple-ceramide-complex"
+        data-surface="dark"
+        data-theme="dark"
         className="w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-24 mb-24 lg:mb-32 scroll-mt-20 lg:scroll-mt-24"
       >
         <div className="overflow-hidden rounded-[2rem] bg-primary text-primary-foreground lg:rounded-[3rem]">

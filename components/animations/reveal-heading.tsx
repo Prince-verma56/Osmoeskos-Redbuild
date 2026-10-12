@@ -43,6 +43,9 @@ export function RevealHeading({
       const parts = el.querySelectorAll<HTMLElement>("[data-rh-word]");
       if (!parts.length) return;
 
+      // The masked (clipped) start state is applied here in the useGSAP layout
+      // effect before paint, so words never flash in place first — they stay
+      // masked, then rise in once the heading's ScrollTrigger enters.
       gsap.from(parts, {
         yPercent: 120,
         duration: 0.9,
