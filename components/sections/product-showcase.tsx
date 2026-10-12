@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Reveal } from "@/components/animations/reveal";
 import { RevealHeading } from "@/components/animations/reveal-heading";
+import { ProductQuickView } from "@/components/product/product-quick-view";
 
 export function ProductShowcase() {
   return (
@@ -31,13 +32,14 @@ export function ProductShowcase() {
               Our clinically formulated body lotion pairs a triple ceramide complex with nourishing botanicals to deeply hydrate, lock in moisture, and restore your skin&apos;s natural balance.
             </p>
           </Reveal>
-          <Reveal delay={0.28}>
+          <Reveal delay={0.28} className="mt-6 flex flex-wrap items-center gap-3">
             <Link
               href="/product/body-lotion"
-              className="btn-premium btn-premium--primary mt-6 inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-medium"
+              className="btn-premium btn-premium--primary inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-medium"
             >
               Shop Body Lotion <span aria-hidden="true" className="btn-premium__arrow">&rarr;</span>
             </Link>
+            <ProductQuickView triggerClassName="btn-premium btn-premium--outline inline-flex items-center gap-2 rounded-full px-7 py-4 text-sm font-medium" />
           </Reveal>
         </div>
 
@@ -68,6 +70,12 @@ export function ProductShowcase() {
             <div className="absolute top-16 right-12 hidden sm:flex flex-col gap-1 items-end">
                <span className="text-[9px] uppercase tracking-widest font-semibold text-primary/60 border border-primary/20 px-2 py-0.5 rounded-full bg-white/50 backdrop-blur-sm">Botanical Blend</span>
                <div className="w-[1px] h-12 bg-primary/20 mr-8 mt-1" />
+            </div>
+
+            {/* Bottom connector — anchors the composition like a labelled product stage */}
+            <div className="absolute bottom-10 left-10 hidden sm:flex flex-col items-start gap-1">
+               <div className="w-[1px] h-8 bg-primary/20 ml-6 mb-1" />
+               <span className="text-[9px] uppercase tracking-widest font-semibold text-primary/60 border border-primary/20 px-2 py-0.5 rounded-full bg-white/50 backdrop-blur-sm">Shea Butter 3%</span>
             </div>
           </Reveal>
 

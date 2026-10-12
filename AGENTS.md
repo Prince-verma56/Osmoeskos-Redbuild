@@ -424,3 +424,91 @@ Scope this pass (confirmed with the user): add the two headline interactive expe
 ### Verified (Phase 19)
 - `tsc --noEmit` clean; `next build` compiles all 9 static routes cleanly (`/`, `/_not-found`, `/about`, `/ingredients`, `/our-story`, `/product`, `/product/body-lotion`, `/search`, `/shop`).
 
+## Phase 20 Decisions — Signature Experiences (Atlas, Texture Studio, Quick View, Chapters)
+
+Scope confirmed with the user: build the net-new signature experiences that earlier phases
+deferred, plus light refinement — **not** a rebuild. No new dependencies (reused
+`@base-ui/react`, `motion`, `gsap`, `lenis`, `lucide-react`).
+
+### Interactive Ingredient Atlas (replaces the homepage static grid)
+- `components/sections/ingredients.tsx` is now a `"use client"` explorer (export name
+  `Ingredients` kept, so `app/page.tsx` is unchanged). A large image stage **crossfades**
+  to the selected ingredient while the copy updates; each entry deep-links to
+  `/ingredients#{id}` and a secondary link points to `/ingredients#triple-ceramide-complex`.
+- **Fixes the data divergence:** the section now consumes the single source
+  `lib/osmekos-data.ts` (`ingredients`) instead of its old hard-coded array.
+- Crossfade is a **Motion** micro-interaction (`AnimatePresence` + `useReducedMotion`);
+  the heading entrance stays on **GSAP** (`RevealHeading`/`Reveal`) — different elements,
+  so the two systems never animate the same property. Selector is a keyboard-operable
+  `role="tablist"` button group (`aria-selected`, focus rings, no hover dependency);
+  mobile shows a horizontal tap rail. Reduced motion → instant swap, content always visible.
+- The `/ingredients` route page (the deep-link targets) is unchanged.
+
+### Texture Studio (new section, `components/sections/texture-studio.tsx`)
+- Image-led sensory moment, id `#texture`. **Signature interaction (desktop, fine pointer,
+  no reduced motion):** a soft circular "lens" follows the cursor — the surrounding image
+  is washed back (dim + slight blur) while the texture stays crisp under a radial
+  CSS-mask lens. Pointer position is written to CSS vars via a ref (no re-render per move).
+- **Mobile / coarse pointer / reduced motion:** the interaction is simply absent and the
+  crisp image shows in full — never blank or broken. Interactivity is gated by
+  `matchMedia("(pointer: fine)")` + `useReducedMotion`, set out of the effect body (rAF +
+  `change` listener) to satisfy `react-hooks/set-state-in-effect`.
+- Copy is approved sensory language only (no absorption/barrier/clinical claims).
+
+### Product Quick View (`components/product/product-quick-view.tsx`)
+- Reusable accessible dialog built on a new thin wrapper `components/ui/dialog.tsx`
+  (centered variant over `@base-ui/react/dialog`, mirroring `components/ui/sheet.tsx`).
+  Base UI provides the focus trap, Escape, scroll-lock, and return-focus.
+- Content: portrait product image (`osmekos-product-detail.jpg`), name, approved
+  description, Triple Ceramide chips + the four ingredient percentages (from
+  `osmekos-data`), and two **real** destinations — `/product/body-lotion` and
+  `/ingredients` (the `Close` controls `render` a `next/link`, so they close *and*
+  navigate). **No cart/checkout / no fake commerce.** Backdrop/popup sit at `z-[70]/[71]`,
+  above the search overlay (`z-[60]`); they are never open together.
+- One trigger currently lives beside the Product Showcase CTA.
+
+### Chapter scroll indicator (`components/sections/chapter-indicator.tsx`, homepage only)
+- Rendered inside `app/page.tsx` so it only mounts on `/`. A restrained vertical dot-nav
+  on the right at `lg+` (`hidden lg:block`), hidden on smaller screens so it never overlaps
+  content. Five chapters map to real sections: Discover (top) → `#story` → `#film` →
+  `#texture` → `#ingredients`.
+- Active chapter is derived from scroll position (rAF-throttled; active = last chapter
+  whose top is above the viewport middle). Clicking scrolls via the shared Lenis
+  (`getLenis()` from `lib/animations/lenis-store.ts`); reduced motion / no-Lenis → native
+  scroll. `aria-current` on the active control; never traps scrolling.
+
+### Light Product Showcase refinement
+- `components/sections/product-showcase.tsx`: added the Quick View trigger beside the
+  "Shop Body Lotion" CTA and a third connector annotation ("Shea Butter 3%") so the stage
+  reads as a labelled product composition. Cream-led layout and the authentic
+  `osmekos-hero-landscape.jpg` are unchanged — no rebuild.
+
+### Homepage order (adjacent image-repeat check)
+`Hero → About → ProductShowcase → HorizontalStory → ScrollVideo → FormulaStorytelling →
+TextureStudio → Ingredients(Atlas)`. Formula uses `Luminous…png`; TextureStudio uses
+`about-skincare.jpg`; the Atlas uses the four `ingredient-*.jpg` — no adjacent repeats.
+
+### Centralized media
+- `lib/media.ts` holds replaceable placeholder refs (`{ src, alt, isPlaceholder, focal }`).
+  `textureMacro` currently points at the authentic `about-skincare.jpg`; swap its `src` for
+  a bespoke `osmekos-texture-macro.webp` when shot — the component needs no change.
+
+### Remaining assets to replace with originals (unchanged from prior phases)
+- Transparent bottle cutout (authentic, not the Seed/Aura `osmekos-bottle-cutout.jpg`),
+  wide formula texture (`osmekos-formula-bg.jpg` placeholder), the scroll-video MP4
+  (`/videos/osmekos-body-lotion-story.mp4`), and the Texture Studio macro
+  (`osmekos-texture-macro.*`). Never substitute Seed/Aura imagery
+  (`hero-product.jpg` / `product-detail.jpg` are byte-identical Aura stills — unused; do
+  not reference).
+
+### Verified (Phase 20)
+- `tsc --noEmit` clean; `eslint` 0 errors (2 pre-existing warnings in `horizontal-story.tsx`);
+  `next build` prerenders all 9 routes as static. New ids (`#texture`, `#ingredients`,
+  `#story`, `#film`) and new UI (atlas, Quick View trigger, texture copy, chapter nav)
+  confirmed present in the prerendered homepage HTML (content available without JS).
+- **Not browser-verified** (no browser automation here). Recommended manual QA: atlas
+  selection + keyboard/touch + deep links; Quick View open/Escape/focus-return + no
+  background scroll + no search conflict; texture lens on desktop vs static on
+  mobile/reduced-motion; chapter active state + click-to-scroll; no horizontal overflow at
+  1440/1024/768/390/375/320; reduced motion leaves all content visible.
+
